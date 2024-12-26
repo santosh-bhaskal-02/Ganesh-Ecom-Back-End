@@ -5,8 +5,6 @@ const morgan = require("morgan");
 const connectMongo = require("./config/config_mongoDB.js");
 const connectCloudinary = require("./config/config_cloudinary.js");
 
-const serverless = require("serverless-http");
-
 //import routers
 const routerProduct = require("./routes/router_product.js");
 const routerSignup = require("./routes/router_signUp.js");
@@ -49,9 +47,6 @@ app.use("/api/users/signup", routerSignup);
 app.use("/api/users/login", routerLogin);
 
 //server
-
-module.exports.handler = serverless(app);
-
 app.listen(port, () => {
   console.log(`Server running on port - http://localhost:${port}`);
 });
