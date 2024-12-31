@@ -22,8 +22,8 @@ router.get("/allorders", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const id = req.params.id;
-    const order = await Order.findById(id)
+    const userId = req.params.id;
+    const order = await Order.findOne({user:userId})
       .populate("user", "name")
       .populate({
         path: "orderItems",

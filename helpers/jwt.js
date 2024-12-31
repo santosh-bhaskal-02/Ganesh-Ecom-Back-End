@@ -9,7 +9,8 @@ function authJwt() {
     isRevoked: isRevoked,
   }).unless({
     path: [
-      { url: /\/api\/products(.*)/, method: ["GET","POST", "OPTIONS"] },
+      { url: /\/api\/products(.*)/, method: ["GET", "POST", "OPTIONS"] },
+      { url: /\/api\/users(.*)/, method: ["GET", "POST", "OPTIONS"] },
       "/api/users/signup",
       "/api/users/login",
     ],
@@ -18,7 +19,7 @@ function authJwt() {
 
 async function isRevoked(req, payload, done) {
   try {
-   //console.log("Payload received in isRevoked:", payload);
+    //console.log("Payload received in isRevoked:", payload);
     return !payload.payload.isAdmin;
   } catch (error) {
     return true;

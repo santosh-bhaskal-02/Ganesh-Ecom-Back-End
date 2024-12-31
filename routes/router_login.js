@@ -1,6 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
-const signupUser = require("../models/model_user");
+const SignupUser = require("../models/model_user");
 const jwt = require("jsonwebtoken");
 const env = require("dotenv");
 
@@ -11,7 +11,7 @@ const secret = process.env.secret;
 // get particular User
 router.get("/userlist/:id", async (req, res) => {
   const id = req.params.id;
-  const user = await signupUser.findById(id).select("-password");
+  const user = await SignupUser.findById(id).select("-password");
 
   if (!user) {
     return res.status(400).json({ message: "User not found" });
@@ -22,7 +22,7 @@ router.get("/userlist/:id", async (req, res) => {
 
 //get User List
 router.get("/userlist", async (req, res) => {
-  const user = await signupUser.find().select("-password");
+  const user = await SignupUser.find().select("-password");
 
   if (!user) {
     return res.status(400).json({ message: "User not found" });
@@ -37,7 +37,7 @@ router.post("/", async (req, res) => {
 
   // console.log(email);
   try {
-    const user = await signupUser.findOne({ email: email });
+    const user = await SignupUser.findOne({ email: email });
     //console.log(user.password);
     if (!user) {
       return res.status(400).json({ message: "User Not Found !" });
@@ -75,7 +75,7 @@ router.delete("/delete/:id", async (req, res) => {
   try {
     const id = req.params.id;
     console.log(id);
-    const response = await signupUser.findByIdAndDelete(id);
+    const response = await SignupUser.findByIdAndDelete(id);
     console.log(response);
     if (!response) {
       return res
