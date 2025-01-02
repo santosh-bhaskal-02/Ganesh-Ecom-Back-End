@@ -177,7 +177,7 @@ router.get("/:id", async (req, res) => {
         success: false,
       });
     }
-    return res.status(400).send(product);
+    return res.status(200).send(product);
     //console.log(productList);
   } catch (err) {
     //console.log("Server error", err);

@@ -7,22 +7,12 @@ const orderSchema = new Schema({
         ref: 'OrderItem',
         required: true
     }],
-    shipAddress: {
-        type: String,
-        required: true
-    },
-    city: {
-        type: String,
-        required: true
-    },
-    country: {
-        type: String,
-        required: true
-    },
-    phone: {
-        type: String,
-        required: true
-    },
+
+      shipAddress:{
+          type: String,
+          required: true
+      },
+
     status: {
         type: String,
         default: "pending",
@@ -57,4 +47,4 @@ const Order = mongoose.models.orderSchema || mongoose.model("Order", orderSchema
 
 //const Order = mongoose.model("Order", orderSchema);
 
-module.exports = Order; 
+module.exports = Order;

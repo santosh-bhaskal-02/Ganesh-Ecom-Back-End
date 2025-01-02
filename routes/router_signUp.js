@@ -1,15 +1,16 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
-const SignupUser = require("../models/model_user");
+const User = require("../models/model_user");
 
 const router = express.Router();
 const saltRounds = 10;
 
 router.post("/add_address/:id", async (req, res) => {
   const userId = req.params.id;
+ // console.log( req.body.addressDetails.lastName);
   const {
     firstName,
-    lastname,
+    lastName,
     email,
     phone,
     address1,
@@ -27,7 +28,7 @@ router.post("/add_address/:id", async (req, res) => {
   }
 
   try {
-    const existingUser = await SignupUser.find({ id: userId });
+    const existingUser = await User.find({ id: userId });
     // console.log(existingUser);
     if (!existingUser) {
       return res.status(409).json({
@@ -36,12 +37,12 @@ router.post("/add_address/:id", async (req, res) => {
       });
     }
 
-    const addAddress = await SignupUser.findByIdAndUpdate(
+    const addAddress = await User.findByIdAndUpdate(
       userId,
       {
         address: {
           firstName: firstName,
-          lastName: lastname,
+          lastName: lastName,
           email: email,
           phone: phone,
           address1: address1,
@@ -81,16 +82,16 @@ router.post("/add_address/:id", async (req, res) => {
 router.post("/address/:id", async (req, res) => {
   const userId = req.params.id;
 
-  //console.log(userId);
+  console.log(userId);
 
   if (!userId) {
     return res.status(400).json({ success: false, message: "UserId Field is required" });
   }
 
   try {
-    const existingUser = await SignupUser.find({ id: userId });
+    const existingUser = await User.findById(userId);
 
-    //console.log(existingUser);
+    console.log(existingUser);
 
     if (!existingUser) {
       return res.status(409).json({
@@ -99,7 +100,7 @@ router.post("/address/:id", async (req, res) => {
       });
     }
 
-    res.status(200).json({ success: true, existingUser });
+    res.status(200).json({ success: true, address: existingUser.address });
   } catch (error) {
     console.log(error);
   }
@@ -114,7 +115,7 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    const existingUser = await SignupUser.findOne({ email: email });
+    const existingUser = await User.findOne({ email: email });
     // console.log("User Exist :", checkUser);
 
     if (existingUser) {

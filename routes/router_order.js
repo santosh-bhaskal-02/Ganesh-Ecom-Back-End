@@ -1,6 +1,7 @@
 const express = require("express");
 const Order = require("../models/model_order");
 const OrderItem = require("../models/model_orderItem");
+const User = require("../models/model_user");
 //const Product = require("../models/model_product");
 const router = express.Router();
 
@@ -23,7 +24,7 @@ router.get("/allorders", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const userId = req.params.id;
-    const order = await Order.findOne({user:userId})
+    const order = await Order.find({user:userId})
       .populate("user", "name")
       .populate({
         path: "orderItems",
@@ -43,21 +44,26 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/place_order", async (req, res) => {
-  // console.log(req.body.orderItem);
+
+    console.log("useId ",req.body.user);
+  console.log(req.body.orderItem);
+
   try {
-    const orderItem = req.body.orderItem;
+    const {user,orderItem} = req.body;
 
     const orderItemIds = await Promise.all(
       orderItem.map(async function (item) {
         const newOrderItem = new OrderItem({
-          product: item.product,
+          product: item.productId,
           quantity: item.quantity,
         });
 
         const savedOrderItem = await newOrderItem.save();
-        return savedOrderItem._id;
+        return savedOrderItem.id;
       })
     );
+
+    console.log("OrderItem IDs:", orderItemIds);
 
     if (orderItemIds.length === 0) {
       throw new Error("OrderItem Ids not created");
@@ -65,6 +71,8 @@ router.post("/place_order", async (req, res) => {
 
     let calculatePrice = await Promise.all(
       orderItemIds.map(async (item) => {
+        console.log("Item IDs:", item);
+        //  console.log(item);
         const orderItem = await OrderItem.findById(item).populate(
           "product",
           "price"
@@ -76,7 +84,7 @@ router.post("/place_order", async (req, res) => {
         if (!orderItem.product) {
           throw new Error(`Product details for OrderItem ID ${item} not found`);
         }
-        //console.log("1", orderItem.product.price);
+        console.log("1", orderItem.product.price);
         const total = orderItem.product.price * orderItem.quantity;
         return total;
       })
@@ -84,15 +92,19 @@ router.post("/place_order", async (req, res) => {
 
     const totalPrice = calculatePrice.reduce((a, b) => a + b, 0);
 
+    const shipAddress = await User.findById(user).select("address");
+  console.log("address", shipAddress.address);
+    if (!shipAddress) {
+      throw new Error(`shipAddress not found`);
+    }
+
     const order = new Order({
       orderItems: orderItemIds,
-      shipAddress: req.body.shipAddress,
-      city: req.body.city,
-      country: req.body.country,
-      phone: req.body.phone,
-      status: req.body.status,
+      shipAddress: shipAddress.address,
+
+      status: "pending",
       totalPrice: totalPrice,
-      user: req.body.user,
+      user: user,
     });
 
     const placedOrder = await order.save();
@@ -102,7 +114,7 @@ router.post("/place_order", async (req, res) => {
         .status(422)
         .json({ success: false, message: "Orders is not placed" });
     }
-    return res.status(200).send(placedOrder);
+    return res.status(200).json({success:true,message:"Order Placed Successfully",order : placedOrder});
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
