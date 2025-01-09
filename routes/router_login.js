@@ -1,6 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
-const SignupUser = require("../models/model_user");
+const User = require("../models/model_user");
 const jwt = require("jsonwebtoken");
 const env = require("dotenv");
 
@@ -11,7 +11,7 @@ const secret = process.env.secret;
 // get particular User
 router.get("/userlist/:id", async (req, res) => {
   const id = req.params.id;
-  const user = await SignupUser.findById(id).select("-password");
+  const user = await User.findById(id).select("-password");
 
   if (!user) {
     return res.status(400).json({ message: "User not found" });
@@ -22,7 +22,7 @@ router.get("/userlist/:id", async (req, res) => {
 
 //get User List
 router.get("/userlist", async (req, res) => {
-  const user = await SignupUser.find().select("-password");
+  const user = await User.find().select("-password");
 
   if (!user) {
     return res.status(400).json({ message: "User not found" });
@@ -37,7 +37,7 @@ router.post("/", async (req, res) => {
 
   // console.log(email);
   try {
-    const user = await SignupUser.findOne({ email: email });
+    const user = await User.findOne({ email: email });
     //console.log(user.password);
     if (!user) {
       return res.status(400).json({ message: "User Not Found !" });
@@ -67,7 +67,7 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "Password is incorrect !" });
     }
   } catch (error) {
-    return res.status(401).json({ message: "internal server error !" });
+    return res.status(401).json({ message: error });
   }
 });
 
@@ -75,20 +75,14 @@ router.delete("/delete/:id", async (req, res) => {
   try {
     const id = req.params.id;
     console.log(id);
-    const response = await SignupUser.findByIdAndDelete(id);
+    const response = await User.findByIdAndDelete(id);
     console.log(response);
     if (!response) {
-      return res
-        .status(400)
-        .json({ Success: false, message: "User is not Deleted..!" });
+      return res.status(400).json({ Success: false, message: "User is not Deleted..!" });
     }
-    return res
-      .status(200)
-      .json({ Success: true, message: "User is Deleted..!" });
+    return res.status(200).json({ Success: true, message: "User is Deleted..!" });
   } catch (err) {
-    return res
-      .status(400)
-      .json({ Success: false, message: "Internal Server Error" });
+    return res.status(400).json({ Success: false, message: "Internal Server Error" });
   }
 });
 
