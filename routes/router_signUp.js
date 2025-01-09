@@ -128,7 +128,7 @@ router.post("/", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     //console.log("Hashed Password:", hash);
 
-    const newUser = new SignupUser({
+    const newUser = new User({
       name: name,
       email: email,
       phone: phone,
