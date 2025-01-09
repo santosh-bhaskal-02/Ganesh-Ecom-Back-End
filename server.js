@@ -19,13 +19,19 @@ const authJwt = require("./helpers/jwt.js");
 const errorHandler = require("./helpers/error_handler.js");
 
 //env file
-env.config();
+env.config()
+
 
 const app = express();
 const port = process.env.PORT;
 
 //middlewares
-app.use(cors());
+app.use(cors({
+  origin: "*", 
+  methods: ["GET", "POST", "PUT", "DELETE"], 
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
 app.use(express.json());
 app.use(morgan("tiny"));
 app.use(authJwt());
