@@ -6,85 +6,76 @@ const env = require("dotenv");
 
 const router = express.Router();
 env.config();
-const secret = process.env.secret;
+const secret = process.env.JWT_SECRET;
 
-// get particular User
-router.get("/userlist/:id", async (req, res) => {
-  const id = req.params.id;
-  const user = await User.findById(id).select("-password");
-
-  if (!user) {
-    return res.status(400).json({ message: "User not found" });
-  }
-
-  res.status(200).send(user);
-});
-
-//get User List
-router.get("/userlist", async (req, res) => {
-  const user = await User.find().select("-password");
-
-  if (!user) {
-    return res.status(400).json({ message: "User not found" });
-  }
-
-  res.status(200).send(user);
-});
-
-//login details
 router.post("/", async (req, res) => {
   const { email, password } = req.body;
 
-  // console.log(email);
   try {
-    const user = await User.findOne({ email: email });
-    //console.log(user.password);
-    res.status(200).json({ message: user });
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
-      return res.status(400).json({ message: "User Not Found !" });
+      return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const result = await bcrypt.compare(password, user.password);
-    //console.log(user.isadmin);
-    res.status(200).json({ message: result });
-    if (user && result) {
-      const token = jwt.sign(
-        {
-          userId: user.id,
-          isAdmin: user.isadmin,
-        },
-        secret,
-        {
-          expiresIn: "1d",
-        }
-      );
-      return res.status(200).json({
-        message: "Sign In Successful.....!",
-        user: user.email,
-        userId: user._id,
-        token: token,
-        admin: user.isadmin,
-      });
-    } else {
-      return res.status(400).json({ message: "Password is incorrect !" });
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid email or password" });
     }
+
+    const token = jwt.sign(
+      { userId: user.id, isAdmin: user.isadmin },
+      secret,
+      { expiresIn: "1d" }
+    );
+
+    res.status(200).json({
+      message: "Login successful",
+      user: user.email,
+      userId: user._id,
+      token,
+      admin: user.isadmin,
+    });
   } catch (error) {
-    return res.status(401).json({ message: error });
+    res.status(500).json({ message: "Internal Server Error", error });
   }
 });
 
+// Get a particular user
+router.get("/userlist/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error", error });
+  }
+});
+
+// Get all users
+router.get("/userlist", async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error", error });
+  }
+});
+
+// Login user
+
+
+// Delete user
 router.delete("/delete/:id", async (req, res) => {
   try {
-    const id = req.params.id;
-    console.log(id);
-    const response = await User.findByIdAndDelete(id);
-    console.log(response);
+    const response = await User.findByIdAndDelete(req.params.id);
     if (!response) {
-      return res.status(400).json({ Success: false, message: "User is not Deleted..!" });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
-    return res.status(200).json({ Success: true, message: "User is Deleted..!" });
-  } catch (err) {
-    return res.status(400).json({ Success: false, message: "Internal Server Error" });
+    res.status(200).json({ success: true, message: "User deleted" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Internal Server Error", error });
   }
 });
 
