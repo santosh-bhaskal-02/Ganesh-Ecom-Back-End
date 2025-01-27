@@ -8,12 +8,9 @@ const router = express.Router();
 router.get("/allorders", async (req, res) => {
   //console.log("Hii");
   try {
-    const orders = await Order.find().populate("user", "name")
-    .sort({ orderDate: -1 });
+    const orders = await Order.find().populate("user", "name").sort({ orderDate: -1 });
     if (!orders) {
-      return res
-        .status(404)
-        .json({ success: false, message: "no orders placed" });
+      return res.status(404).json({ success: false, message: "no orders placed" });
     }
     return res.status(200).send(orders);
   } catch (err) {
@@ -21,21 +18,20 @@ router.get("/allorders", async (req, res) => {
   }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/fetch_orders/:id", async (req, res) => {
   try {
+    console.log("usecart ", req.params.id);
     const userId = req.params.id;
-    const order = await Order.find({user:userId})
+    const order = await Order.find({ user: userId })
       .populate("user", "name")
       .populate({
         path: "orderItems",
         populate: { path: "product", populate: "category" },
       })
       .sort({ orderDate: -1 });
-
+      console.log("Order ", order);
     if (!order) {
-      return res
-        .status(404)
-        .json({ success: false, message: "order not found" });
+      return res.status(404).json({ success: false, message: "order not found" });
     }
     return res.status(200).send(order);
   } catch (err) {
@@ -44,12 +40,11 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/place_order", async (req, res) => {
-
-    console.log("useId ",req.body.user);
+  console.log("useId ", req.body.user);
   console.log(req.body.orderItem);
 
   try {
-    const {user,orderItem} = req.body;
+    const { user, orderItem } = req.body;
 
     const orderItemIds = await Promise.all(
       orderItem.map(async function (item) {
@@ -73,10 +68,7 @@ router.post("/place_order", async (req, res) => {
       orderItemIds.map(async (item) => {
         console.log("Item IDs:", item);
         //  console.log(item);
-        const orderItem = await OrderItem.findById(item).populate(
-          "product",
-          "price"
-        );
+        const orderItem = await OrderItem.findById(item).populate("product", "price");
 
         if (!orderItem) {
           throw new Error(`OrderItem with ID ${item} not found`);
@@ -93,7 +85,7 @@ router.post("/place_order", async (req, res) => {
     const totalPrice = calculatePrice.reduce((a, b) => a + b, 0);
 
     const shipAddress = await User.findById(user).select("address");
-  console.log("address", shipAddress.address);
+    console.log("address", shipAddress.address);
     if (!shipAddress) {
       throw new Error(`shipAddress not found`);
     }
@@ -110,11 +102,85 @@ router.post("/place_order", async (req, res) => {
     const placedOrder = await order.save();
 
     if (!placedOrder) {
-      return res
-        .status(422)
-        .json({ success: false, message: "Orders is not placed" });
+      return res.status(422).json({ success: false, message: "Orders is not placed" });
     }
-    return res.status(200).json({success:true,message:"Order Placed Successfully",order : placedOrder});
+    return res
+      .status(200)
+      .json({ success: true, message: "Order Placed Successfully", order: placedOrder });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.post("/place_order_cart", async (req, res) => {
+  console.log("useId ", req.body.user);
+   console.log(req.body.orderItem);
+
+  try {
+    const { user, orderItem } = req.body;
+
+    const orderItemIds = await Promise.all(
+      orderItem.map(async function (item) {
+        // console.log(item)
+        const newOrderItem = new OrderItem({
+          product: item.product.id,
+          quantity: item.quantity,
+        });
+
+        const savedOrderItem = await newOrderItem.save();
+        return savedOrderItem.id;
+      })
+    );
+
+    console.log("OrderItem IDs:", orderItemIds);
+
+    if (orderItemIds.length === 0) {
+      throw new Error("OrderItem Ids not created");
+    }
+
+    let calculatePrice = await Promise.all(
+      orderItemIds.map(async (item) => {
+        console.log("Item IDs:", item);
+        //  console.log(item);
+        const orderItem = await OrderItem.findById(item).populate("product", "price");
+
+        if (!orderItem) {
+          throw new Error(`OrderItem with ID ${item} not found`);
+        }
+        if (!orderItem.product) {
+          throw new Error(`Product details for OrderItem ID ${item} not found`);
+        }
+        console.log("1", orderItem.product.price);
+        const total = orderItem.product.price * orderItem.quantity;
+        return total;
+      })
+    );
+
+    const totalPrice = calculatePrice.reduce((a, b) => a + b, 0);
+
+    const shipAddress = await User.findById(user).select("address");
+    console.log("address", shipAddress.address);
+    if (!shipAddress) {
+      throw new Error(`shipAddress not found`);
+    }
+
+    const order = new Order({
+      orderItems: orderItemIds,
+      shipAddress: shipAddress.address,
+
+      status: "pending",
+      totalPrice: totalPrice,
+      user: user,
+    });
+
+    const placedOrder = await order.save();
+
+    if (!placedOrder) {
+      return res.status(422).json({ success: false, message: "Orders is not placed" });
+    }
+    return res
+      .status(200)
+      .json({ success: true, message: "Order Placed Successfully", order: placedOrder });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
@@ -156,13 +222,9 @@ router.delete("/delete/:id", async (req, res) => {
           await OrderItem.findByIdAndDelete(item);
         })
       );
-      return res
-        .status(200)
-        .json({ Success: true, message: "order is Deleted..!" });
+      return res.status(200).json({ Success: true, message: "order is Deleted..!" });
     } else {
-      return res
-        .status(404)
-        .json({ Success: false, message: "order is not Deleted..!" });
+      return res.status(404).json({ Success: false, message: "order is not Deleted..!" });
     }
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
@@ -201,9 +263,7 @@ router.get("/get/total_orders", async (req, res) => {
 
     res.status(200).json({ totalOrders: totalOrders });
   } catch (err) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 });
 
@@ -219,9 +279,7 @@ router.get("/get/user_orders/:id", async (req, res) => {
       .sort({ orderDate: -1 });
 
     if (!userOrderList) {
-      return res
-        .status(404)
-        .json({ success: false, message: "order not found" });
+      return res.status(404).json({ success: false, message: "order not found" });
     }
     return res.status(200).send(userOrderList);
   } catch (err) {

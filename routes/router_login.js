@@ -7,6 +7,7 @@ const env = require("dotenv");
 const router = express.Router();
 env.config();
 const secret = process.env.JWT_SECRET;
+const saltRounds = 10;
 //console.log("SECRET", secret);
 
 router.post("/authenticate", async (req, res) => {
@@ -45,7 +46,34 @@ router.post("/authenticate", async (req, res) => {
   }
 });
 
-// Get a particular user
+router.put("/resetPassword", async (req, res) => {
+  const { email, password } = req.body;
+  console.log("Email :", email);
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User with this email does not exist." });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    return res.status(200).json({
+      message: "Password updated successfully!",
+      email,
+    });
+  } catch (error) {
+    console.error("Error during password reset:", error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+});
+
 router.get("/userlist/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
@@ -58,7 +86,6 @@ router.get("/userlist/:id", async (req, res) => {
   }
 });
 
-// Get all users
 router.get("/userlist", async (req, res) => {
   try {
     const users = await User.find().select("-password");
@@ -68,9 +95,6 @@ router.get("/userlist", async (req, res) => {
   }
 });
 
-// Login user
-
-// Delete user
 router.delete("/delete/:id", async (req, res) => {
   try {
     const response = await User.findByIdAndDelete(req.params.id);
