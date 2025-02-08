@@ -8,10 +8,10 @@ const orderSchema = new Schema({
         required: true
     }],
 
-      shipAddress:{
-          type: String,
-          required: true
-      },
+    shipAddress:{
+        type: Object,
+        required: true
+    },
 
     status: {
         type: String,

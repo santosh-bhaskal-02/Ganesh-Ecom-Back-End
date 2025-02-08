@@ -13,7 +13,7 @@ const router = express.Router();
 
 router.post("/add", upload.single("image"), async (req, res) => {
   try {
-    const { title, price, stock, category, description } = req.body;
+    const { title, price, stock, size, category, description } = req.body;
 
     if (!mongoose.isValidObjectId(category)) {
       return res.status(400).json({ message: "Invalid Category" });
@@ -31,6 +31,7 @@ router.post("/add", upload.single("image"), async (req, res) => {
       },
       price,
       stock,
+      size,
       category,
       reachDisciption: description,
     });

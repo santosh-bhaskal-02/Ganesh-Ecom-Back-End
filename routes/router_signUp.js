@@ -7,7 +7,7 @@ const saltRounds = 10;
 
 router.post("/add_address/:id", async (req, res) => {
   const userId = req.params.id;
- // console.log( req.body.addressDetails.lastName);
+  // console.log( req.body.addressDetails.lastName);
   const {
     firstName,
     lastName,
@@ -107,11 +107,11 @@ router.post("/address/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  //console.log(req.body.name);
-  const { name, email, phone, password } = req.body;
+  console.log(req.body.firstName);
+  const { firstName, lastName, email, phone, password } = req.body;
 
-  if (!name || !email || !phone || !password) {
-    res.status(400).json({ success: false, message: "All Fields are required" });
+  if (!firstName || !lastName || !email || !phone || !password) {
+    return res.status(400).json({ success: false, message: "All Fields are required" });
   }
 
   try {
@@ -129,7 +129,8 @@ router.post("/", async (req, res) => {
     //console.log("Hashed Password:", hash);
 
     const newUser = new User({
-      name: name,
+      firstName: firstName,
+      lastName: lastName,
       email: email,
       phone: phone,
       password: hashedPassword,
@@ -149,7 +150,8 @@ router.post("/", async (req, res) => {
       message: "Signed Up Successfully...!",
       user: {
         id: createdUser._id,
-        name: createdUser.name,
+        firstName: createdUser.firstName,
+        lastName: createdUser.lastName,
         email: createdUser.email,
         phone: createdUser.phone,
       },

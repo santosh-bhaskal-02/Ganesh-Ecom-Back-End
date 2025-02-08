@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/model_user");
 const jwt = require("jsonwebtoken");
 const env = require("dotenv");
+const Admin = require("../models/model_admin");
 
 const router = express.Router();
 env.config();
@@ -10,23 +11,81 @@ const secret = process.env.JWT_SECRET;
 const saltRounds = 10;
 //console.log("SECRET", secret);
 
+router.post("/", async (req, res) => {
+  //console.log(req.body.name);
+  const { firstName, lastName, email, phone, password } = req.body;
+
+  if (!firstName || !lastName || !email || !phone || !password) {
+    res.status(400).json({ success: false, message: "All Fields are required" });
+  }
+
+  try {
+    const existingAdmin = await Admin.findOne({ email: email });
+    // console.log("User Exist :", checkUser);
+
+    if (existingAdmin) {
+      return res.status(409).json({
+        success: false,
+        message: "Email already exists, Try logging in.",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    //console.log("Hashed Password:", hash);
+
+    const newAdmin = new Admin({
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      phone: phone,
+      password: hashedPassword,
+    });
+
+    const createdAdmin = await newAdmin.save();
+
+    if (!createdAdmin) {
+      return res.json({
+        success: false,
+        message: "Error occured Registering User",
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Signed Up Successfully...!",
+      admin: {
+        id: createdAdmin._id,
+        name: createdAdmin.firstName,
+        email: createdAdmin.email,
+        phone: createdAdmin.phone,
+      },
+    });
+  } catch (err) {
+    console.error("Error :", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error. Please try again later.",
+    });
+  }
+});
+
 router.post("/authenticate", async (req, res) => {
   const { email, password } = req.body;
-  // console.log(email);
+   console.log(email);
   try {
-    const user = await User.findOne({ email }).select("password isadmin");
-    if (!user) {
+    const admin = await Admin.findOne({ email }).select("password");
+    if (!admin) {
       return res.status(401).json({ message: "Invalid email" });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, admin.password);
 
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid password" });
     }
     //console.log(user);
 
-    const token = jwt.sign({ userId: user._id, isAdmin: user.isadmin }, secret, {
+    const token = jwt.sign({ userId: admin._id, isAdmin: admin.isadmin }, secret, {
       expiresIn: "1d",
     });
 
@@ -37,49 +96,35 @@ router.post("/authenticate", async (req, res) => {
     return res.status(200).json({
       message: "Login successful",
       user: email,
-      userId: user._id,
+      userId: admin._id,
       token,
-      admin: user.isadmin,
+      admin: admin.isadmin,
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: "Internal Server Error", error });
+   
   }
 });
 
-
 router.put("/resetPassword", async (req, res) => {
+  const { email, password } = req.body;
+  console.log("Email :", email);
+
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and new password are required." });
-    }
-
-    console.log("Reset password request received for:", email);
-
-    const user = await User.findOne({ email });
+    const admin = await Admin.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User with this email does not exist." });
     }
 
-    console.log(" User found:", user.email);
-
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const updatedUser = await User.findOneAndUpdate(
-      { email },
-      { $set: { password: hashedPassword } },
-      { new: true } 
-    );
-
-    if (!updatedUser) {
-      return res.status(500).json({ message: "Failed to update password. Try again later." });
-    }
-
-    console.log("Password updated successfully for:", email);
+    user.password = hashedPassword;
+    await user.save();
 
     return res.status(200).json({
       message: "Password updated successfully!",
+      email,
     });
   } catch (error) {
     console.error("Error during password reset:", error);

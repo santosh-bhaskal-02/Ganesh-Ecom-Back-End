@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const userSchema = new Schema({
+const adminSchema = new Schema({
   firstName: {
     type: String,
     required: true,
@@ -40,19 +40,19 @@ const userSchema = new Schema({
   },
   isadmin: {
     type: Boolean,
-    default: false,
+    default: true,
   },
 });
 
-userSchema.virtual("id").get(function () {
+adminSchema.virtual("id").get(function () {
   // console.log(this._id.toHexString());
   return this._id.toHexString();
 });
 
-userSchema.set("toJSON", {
+adminSchema.set("toJSON", {
   virtuals: true,
 });
 
-const Users = mongoose.models.signupUser || mongoose.model("Users", userSchema);
+const Admin = mongoose.models.signupAdmin || mongoose.model("Admin", adminSchema);
 
-module.exports = Users;
+module.exports = Admin;

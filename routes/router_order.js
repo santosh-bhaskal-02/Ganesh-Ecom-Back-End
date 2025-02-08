@@ -2,8 +2,9 @@ const express = require("express");
 const Order = require("../models/model_order");
 const OrderItem = require("../models/model_orderItem");
 const User = require("../models/model_user");
-//const Product = require("../models/model_product");
+const Product = require("../models/model_product");
 const router = express.Router();
+const mongoose = require("mongoose");
 
 router.get("/allorders", async (req, res) => {
   //console.log("Hii");
@@ -29,7 +30,7 @@ router.get("/fetch_orders/:id", async (req, res) => {
         populate: { path: "product", populate: "category" },
       })
       .sort({ orderDate: -1 });
-      console.log("Order ", order);
+    console.log("Order ", order);
     if (!order) {
       return res.status(404).json({ success: false, message: "order not found" });
     }
@@ -41,13 +42,28 @@ router.get("/fetch_orders/:id", async (req, res) => {
 
 router.post("/place_order", async (req, res) => {
   console.log("useId ", req.body.user);
-  console.log(req.body.orderItem);
+  console.log("Order Items:", req.body.orderItem);
 
   try {
     const { user, orderItem } = req.body;
 
     const orderItemIds = await Promise.all(
       orderItem.map(async function (item) {
+        const product = await Product.findById(item.productId);
+
+        if (!product) {
+          throw new Error(`Product with ID ${item.productId} not found`);
+        }
+
+        if (product.stock < item.quantity) {
+          throw new Error(`Insufficient stock for ${product.title}`);
+        }
+
+        // Deduct stock
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { stock: -item.quantity },
+        });
+
         const newOrderItem = new OrderItem({
           product: item.productId,
           quantity: item.quantity,
@@ -70,12 +86,10 @@ router.post("/place_order", async (req, res) => {
         //  console.log(item);
         const orderItem = await OrderItem.findById(item).populate("product", "price");
 
-        if (!orderItem) {
-          throw new Error(`OrderItem with ID ${item} not found`);
+        if (!orderItem || !orderItem.product) {
+          throw new Error(`Product details for OrderItem ID ${id} not found`);
         }
-        if (!orderItem.product) {
-          throw new Error(`Product details for OrderItem ID ${item} not found`);
-        }
+
         console.log("1", orderItem.product.price);
         const total = orderItem.product.price * orderItem.quantity;
         return total;
@@ -104,6 +118,7 @@ router.post("/place_order", async (req, res) => {
     if (!placedOrder) {
       return res.status(422).json({ success: false, message: "Orders is not placed" });
     }
+
     return res
       .status(200)
       .json({ success: true, message: "Order Placed Successfully", order: placedOrder });
@@ -114,14 +129,28 @@ router.post("/place_order", async (req, res) => {
 
 router.post("/place_order_cart", async (req, res) => {
   console.log("useId ", req.body.user);
-   console.log(req.body.orderItem);
+  console.log(req.body.orderItem);
 
   try {
     const { user, orderItem } = req.body;
 
     const orderItemIds = await Promise.all(
       orderItem.map(async function (item) {
+        const product = await Product.findById(item.product.id);
         // console.log(item)
+
+        if (!product) {
+          throw new Error(`Product with ID ${item.product.id} not found`);
+        }
+
+        if (product.stock < item.quantity) {
+          throw new Error(`Insufficient stock for ${product.title}`);
+        }
+
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { stock: -item.quantity },
+        });
+
         const newOrderItem = new OrderItem({
           product: item.product.id,
           quantity: item.quantity,
@@ -144,12 +173,10 @@ router.post("/place_order_cart", async (req, res) => {
         //  console.log(item);
         const orderItem = await OrderItem.findById(item).populate("product", "price");
 
-        if (!orderItem) {
-          throw new Error(`OrderItem with ID ${item} not found`);
+        if (!orderItem || !orderItem.product) {
+          throw new Error(`Product details for OrderItem ID ${id} not found`);
         }
-        if (!orderItem.product) {
-          throw new Error(`Product details for OrderItem ID ${item} not found`);
-        }
+
         console.log("1", orderItem.product.price);
         const total = orderItem.product.price * orderItem.quantity;
         return total;
@@ -178,6 +205,7 @@ router.post("/place_order_cart", async (req, res) => {
     if (!placedOrder) {
       return res.status(422).json({ success: false, message: "Orders is not placed" });
     }
+
     return res
       .status(200)
       .json({ success: true, message: "Order Placed Successfully", order: placedOrder });

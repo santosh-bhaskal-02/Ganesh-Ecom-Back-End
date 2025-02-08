@@ -9,10 +9,13 @@ function authJwt() {
     isRevoked: isRevoked,
   }).unless({
     path: [
-      { url: /\/api\/products(.*)/, method: ["GET", "POST", "OPTIONS"] },
-      { url: /\/api\/users(.*)/, method: ["GET", "POST","PUT", "OPTIONS"] },
+      { url: /\/api\/products(.*)/, method: ["GET", "POST", "PUT", "DELETE", "OPTIONS"] },
+      { url: /\/api\/users(.*)/, method: ["GET", "POST", "PUT", "OPTIONS"] },
       "/api/users/signup",
       "/api/users/login",
+      "/api/users/signup/admin/authenticate",
+      "/api/users/login/resetPassword",
+      "/api/products/orders/update/:id",
     ],
   });
 }
