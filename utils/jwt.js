@@ -19,6 +19,8 @@ function authJwt() {
       { url: "/api/users/signup/admin/authenticate", methods: ["POST"] },
       { url: "/api/users/login/resetPassword", methods: ["PUT"] },
       { url: "/api/products/orders/update/:id", methods: ["PUT"] },
+      { url: "/api/products/category/fetch", methods: ["GET"] },
+      { url: "/api/dashboard/fetch", methods: ["GET"] },
     ],
   });
 }

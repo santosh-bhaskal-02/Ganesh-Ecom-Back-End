@@ -4,6 +4,7 @@ const multer = require("multer");
 const Product = require("../models/model_product");
 const uploadtoCloudinary = require("../utils/utils_cloudinary_upload");
 const deletetoCloudinary = require("../utils/utils_cloudinary_delete");
+const productController = require("../controllers/productController");
 
 //multer config
 const storage = multer.memoryStorage();
@@ -11,7 +12,11 @@ const upload = multer({ storage });
 
 const router = express.Router();
 
-router.post("/add", upload.single("image"), async (req, res) => {
+router.get("/", productController.fetch);
+
+router.post("/add", upload.single("image"), productController.addProduct);
+/*
+  upload.single("image"), async (req, res) => {
   try {
     const { title, price, stock, size, category, description } = req.body;
 
@@ -52,7 +57,7 @@ router.post("/add", upload.single("image"), async (req, res) => {
     });
   }
 });
-
+*/
 router.delete("/delete/:id", async (req, res) => {
   try {
     const id = req.params.id;
@@ -62,7 +67,7 @@ router.delete("/delete/:id", async (req, res) => {
     }
 
     const deletedProduct = await Product.findByIdAndDelete(id);
-    console.log(deletedProduct);
+    // console.log(deletedProduct);
     //console.log(deletedProduct.thumbnail.public_id);
     if (!deletedProduct) {
       return res
@@ -70,17 +75,13 @@ router.delete("/delete/:id", async (req, res) => {
         .json({ Success: false, message: "Product is not Deleted..!" });
     }
 
-    const response = await deletetoCloudinary(
-      deletedProduct.thumbnail.public_id
-    );
+    const response = await deletetoCloudinary(deletedProduct.thumbnail.public_id);
     if (!response) {
       return res
         .status(400)
         .json({ success: false, message: "Product is not Deleted..!" });
     }
-    return res
-      .status(200)
-      .json({ Success: true, message: "Product is Deleted..!" });
+    return res.status(200).json({ Success: true, message: "Product is Deleted..!" });
   } catch (err) {
     res.status(400).json({ Success: false, message: err.message });
   }
@@ -93,7 +94,7 @@ router.put("/update/:id", upload.single("image"), async (req, res) => {
       return res.status(400).json({ message: "Invalid product" });
     }
 
-    const { title, price, stock, category, description } = req.body;
+    const { title, price, stock, size, category, description } = req.body;
     //console.log("Request body:", req.body.title);
 
     if (!mongoose.isValidObjectId(category)) {
@@ -101,7 +102,32 @@ router.put("/update/:id", upload.single("image"), async (req, res) => {
     }
 
     if (!req.file || !req.file.buffer) {
-      return res.status(400).json({ message: "No image uploaded" });
+      const updatedProduct = await Product.findByIdAndUpdate(
+        productId,
+        {
+          title,
+          price,
+          stock,
+          size,
+          category,
+          reachDisciption: description,
+        },
+        {
+          new: true,
+        }
+      );
+
+      if (!updatedProduct) {
+        return res.status(400).json({
+          success: false,
+          message: "Product is not Updated..!",
+        });
+      }
+      return res.status(201).json({
+        success: true,
+        message: "Product is Updated Successfully..!",
+        updatedProduct,
+      });
     }
 
     const oldProduct = await Product.findById(productId);
@@ -124,6 +150,7 @@ router.put("/update/:id", upload.single("image"), async (req, res) => {
         },
         price,
         stock,
+        size,
         category,
         reachDisciption: description,
       },
@@ -135,34 +162,19 @@ router.put("/update/:id", upload.single("image"), async (req, res) => {
     if (!updatedProduct) {
       return res.status(400).json({
         success: false,
-        message: "product is not added",
+        message: "Product is not Updated",
       });
     }
-    return res.status(201).json(updatedProduct);
+    return res.status(201).json({
+      success: true,
+      message: "Product is Updated Successfully..!",
+      updatedProduct,
+    });
   } catch (err) {
-    console.error("Error saving product:", err.message);
+    console.error("Error Updated product:", err.message);
     return res.status(500).json({
       success: false,
       error: err.message,
-    });
-  }
-});
-
-router.get("/", async (req, res) => {
-  try {
-    const productList = await Product.find().populate("category");
-    if (!productList) {
-      res.status(500).json({
-        success: false,
-      });
-    }
-    res.send(productList);
-    //console.log(productList);
-  } catch (err) {
-    console.log("Server error", err);
-    res.status(500).json({
-      error: err.message,
-      success: false,
     });
   }
 });
@@ -200,11 +212,11 @@ router.get("/get/count", async (req, res) => {
 
     return res.status(200).json({ productCount: productCount });
   } catch (err) {
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal Server Error" });
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 });
+
+router.get("/get/inventory_count", productController.inventoryCount);
 
 router.get("/get/featured", async (req, res) => {
   try {

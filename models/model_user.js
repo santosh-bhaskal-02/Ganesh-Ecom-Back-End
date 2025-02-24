@@ -16,17 +16,17 @@ const userSchema = new Schema({
     type: String,
     required: true,
     unique: true,
+    trim: true,
   },
   phone: {
     type: String,
     required: true,
-    unique: true,
   },
   address: {
     firstName: { type: String },
     lastName: { type: String },
     email: { type: String },
-    phone: { type: Number },
+    phone: { type: String },
     address1: { type: String },
     address2: { type: String },
     city: { type: String },
@@ -38,14 +38,24 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
-  isadmin: {
+  cart: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Cart",
+    default: null,
+  },
+  orders: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
+    },
+  ],
+  isAdmin: {
     type: Boolean,
     default: false,
   },
 });
 
 userSchema.virtual("id").get(function () {
-  // console.log(this._id.toHexString());
   return this._id.toHexString();
 });
 
@@ -53,6 +63,5 @@ userSchema.set("toJSON", {
   virtuals: true,
 });
 
-const Users = mongoose.models.signupUser || mongoose.model("Users", userSchema);
-
+const Users = mongoose.models.Users || mongoose.model("Users", userSchema);
 module.exports = Users;

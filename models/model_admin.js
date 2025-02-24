@@ -38,7 +38,25 @@ const adminSchema = new Schema({
     type: String,
     required: true,
   },
-  isadmin: {
+  products: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+    },
+  ],
+  categories: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    },
+  ],
+  orders: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
+    },
+  ],
+  isAdmin: {
     type: Boolean,
     default: true,
   },

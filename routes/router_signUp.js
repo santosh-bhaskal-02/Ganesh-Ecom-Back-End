@@ -1,9 +1,14 @@
 const express = require("express");
-const bcrypt = require("bcryptjs");
 const User = require("../models/model_user");
+const authController = require("../controllers/authController");
 
 const router = express.Router();
-const saltRounds = 10;
+
+router.post("/", authController.register);
+
+router.post("/send_otp", authController.sendSignupOTP);
+
+router.post("/verify_otp", authController.verifyOTP);
 
 router.post("/add_address/:id", async (req, res) => {
   const userId = req.params.id;
@@ -103,65 +108,6 @@ router.post("/address/:id", async (req, res) => {
     res.status(200).json({ success: true, address: existingUser.address });
   } catch (error) {
     console.log(error);
-  }
-});
-
-router.post("/", async (req, res) => {
-  console.log(req.body.firstName);
-  const { firstName, lastName, email, phone, password } = req.body;
-
-  if (!firstName || !lastName || !email || !phone || !password) {
-    return res.status(400).json({ success: false, message: "All Fields are required" });
-  }
-
-  try {
-    const existingUser = await User.findOne({ email: email });
-    // console.log("User Exist :", checkUser);
-
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: "Email already exists, Try logging in.",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    //console.log("Hashed Password:", hash);
-
-    const newUser = new User({
-      firstName: firstName,
-      lastName: lastName,
-      email: email,
-      phone: phone,
-      password: hashedPassword,
-    });
-
-    const createdUser = await newUser.save();
-
-    if (!createdUser) {
-      return res.json({
-        success: false,
-        message: "Error occured Registering User",
-      });
-    }
-
-    return res.status(201).json({
-      success: true,
-      message: "Signed Up Successfully...!",
-      user: {
-        id: createdUser._id,
-        firstName: createdUser.firstName,
-        lastName: createdUser.lastName,
-        email: createdUser.email,
-        phone: createdUser.phone,
-      },
-    });
-  } catch (err) {
-    console.error("Error :", err);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error. Please try again later.",
-    });
   }
 });
 
