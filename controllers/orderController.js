@@ -225,41 +225,6 @@ class orderController {
           .json({ success: false, message: "Failed to create payment order" });
       }
 
-      const orderItemsHtml = orderItemDetails
-        .map(
-          (item) => `
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-          <img src="${item.thumbnail.image_url}" style="width: 50px; height: 50px; border-radius: 5px;" alt="Product">
-          <div>
-            <p><strong>${item.title}</strong></p>
-            <p>Price: ₹${item.price} x ${item.quantity} = ₹${item.totalPrice}</p>
-          </div>
-        </div>
-      `
-        )
-        .join("");
-
-      const emailTemplate = `
-      <div style="font-family: Arial, sans-serif; padding: 20px;">
-        <h2>Order Confirmation</h2>
-        <p>Thank you for your order! Here are your order details:</p>
-
-        <h3>Order Items</h3>
-        ${orderItemsHtml}
-
-        <h3>Delivery Address</h3>
-        <p>${address.address1}, ${address.city}, ${address.state}, ${address.zip}, ${address.country}</p>
-
-        <h3>Total Price</h3>
-        <p><strong>₹${totalPrice}</strong></p>
-
-        <p>We will notify you once your order is shipped.</p>
-      </div>
-    `;
-
-      // Send confirmation email
-      await sendEmail(email, "Order Placed Successfully", emailTemplate);
-
       return res.status(200).json({
         success: true,
         message: "Order Placed Successfully",
