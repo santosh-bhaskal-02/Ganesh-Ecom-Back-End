@@ -1,6 +1,350 @@
+const authService = require("../services/authService");
 const orderService = require("../services/orderService");
+const productService = require("../services/productService");
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
 
 class orderController {
+  async allOrders(req, res) {
+    try {
+      const orders = await orderService.allOrders();
+      if (!orders) {
+        return res.status(404).json({ success: false, message: "no orders placed" });
+      }
+      return res.status(200).send(orders);
+    } catch (err) {
+      return res.status(500).json({ success: false, message: err.message });
+    }
+  }
+
+  async orderById(req, res) {
+    try {
+      console.log("usecart ", req.params.id);
+      const userId = req.params.id;
+      const order = await orderService.orderById(userId);
+      //console.log("Order ", order);
+      if (!order) {
+        return res.status(404).json({ success: false, message: "order not found" });
+      }
+      return res.status(200).send(order);
+    } catch (err) {
+      return res.status(500).json({ success: false, message: err.message });
+    }
+  }
+
+  async placedOrder(req, res) {
+    try {
+      const { user, orderItem } = req.body;
+
+      const userDetails = await authService.userbyId(user);
+
+      if (!userDetails) {
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+      const { email, address } = userDetails;
+
+      console.log("User Address:", address);
+
+      const orderItemDetails = await Promise.all(
+        orderItem.map(async (item) => {
+          const product = await productService.productById(item.productId);
+          // Product.findById(item.productId).select("title price stock thumbnail");
+          if (!product) throw new Error(`Product with ID ${item.productId} not found`);
+          if (product.stock < item.quantity)
+            throw new Error(`Insufficient stock for ${product.title}`);
+
+          const updateStock = await productService.updateStock(
+            item.productId,
+            item.quantity
+          );
+
+          if (!updateStock) throw new Error("Product stock not updated");
+
+          const createOrderItem = await orderService.createOrderItem(
+            item.productId,
+            item.quantity
+          );
+
+          if (!createOrderItem) {
+            throw new Error("Order item not created");
+          }
+
+          return {
+            id: createOrderItem.id,
+            title: product.title,
+            price: product.price,
+            quantity: item.quantity,
+            thumbnail: product.thumbnail,
+            totalPrice: product.price * item.quantity,
+          };
+        })
+      );
+
+      const totalPrice = orderItemDetails.reduce((sum, item) => sum + item.totalPrice, 0);
+      const orderItems = orderItemDetails.map((item) => item.id);
+
+      const placedOrder = await orderService.placedOrder(
+        orderItems,
+        address,
+        totalPrice,
+        user
+      );
+
+      if (!placedOrder)
+        return res.status(422).json({ success: false, message: "Order is not placed" });
+
+      const razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+      });
+
+      const options = {
+        amount: totalPrice * 100,
+        currency: "INR",
+        receipt: `order_${placedOrder._id}`,
+        payment_capture: 1,
+      };
+
+      const razorpayOrder = await razorpay.orders.create(options);
+
+      if (!razorpayOrder) {
+        return res
+          .status(500)
+          .json({ success: false, message: "Failed to create payment order" });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Order Placed Successfully",
+        order: placedOrder,
+        orderDetails: orderItemDetails,
+        razorpayOrder: razorpayOrder,
+        user: userDetails,
+      });
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({ success: false, message: err.message });
+    }
+  }
+
+  async placedCartOrder(req, res) {
+    try {
+      const { user, orderItem } = req.body;
+
+      const orderItemIds = await Promise.all(
+        orderItem.map(async function (item) {
+          const product = await productService.productById(item.product.id);
+
+          if (!product) {
+            throw new Error(`Product with ID ${item.product.id} not found`);
+          }
+
+          if (product.stock < item.quantity) {
+            throw new Error(`Insufficient stock for ${product.title}`);
+          }
+
+          const updateStock = await productService.updateStock(
+            item.productId,
+            item.quantity
+          );
+
+          if (!updateStock) throw new Error("Product stock not updated");
+
+          const createOrderItem = await orderService.createOrderItem(
+            item.product.id,
+            item.quantity
+          );
+
+          if (!createOrderItem) {
+            throw new Error("Order item not created");
+          }
+          return createOrderItem.id;
+        })
+      );
+
+      console.log("OrderItem IDs:", orderItemIds);
+
+      if (orderItemIds.length === 0) {
+        throw new Error("OrderItem Ids not created");
+      }
+
+      let calculatePrice = await Promise.all(
+        orderItemIds.map(async (item) => {
+          console.log("Item IDs:", item);
+          //  console.log(item);
+          const orderItem = await orderService.orderItemById(item);
+
+          if (!orderItem || !orderItem.product) {
+            throw new Error(`Product details for OrderItem ID ${id} not found`);
+          }
+
+          console.log("1", orderItem.product.price);
+          const total = orderItem.product.price * orderItem.quantity;
+          return total;
+        })
+      );
+
+      const totalPrice = calculatePrice.reduce((a, b) => a + b, 0);
+
+      const shipAddress = await authService.userbyId(user);
+
+      console.log("address", shipAddress.address);
+
+      if (!shipAddress) {
+        throw new Error(`shipAddress not found`);
+      }
+
+      const placedOrder = await orderService.placedOrder(
+        orderItemIds,
+        shipAddress.address,
+        totalPrice,
+        user
+      );
+
+      if (!placedOrder) {
+        return res.status(422).json({ success: false, message: "Orders is not placed" });
+      }
+
+      const razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+      });
+
+      const options = {
+        amount: totalPrice * 100,
+        currency: "INR",
+        receipt: `order_${placedOrder._id}`,
+        payment_capture: 1,
+      };
+
+      const razorpayOrder = await razorpay.orders.create(options);
+
+      if (!razorpayOrder) {
+        return res
+          .status(500)
+          .json({ success: false, message: "Failed to create payment order" });
+      }
+
+      const orderItemsHtml = orderItemDetails
+        .map(
+          (item) => `
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+          <img src="${item.thumbnail.image_url}" style="width: 50px; height: 50px; border-radius: 5px;" alt="Product">
+          <div>
+            <p><strong>${item.title}</strong></p>
+            <p>Price: ₹${item.price} x ${item.quantity} = ₹${item.totalPrice}</p>
+          </div>
+        </div>
+      `
+        )
+        .join("");
+
+      const emailTemplate = `
+      <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2>Order Confirmation</h2>
+        <p>Thank you for your order! Here are your order details:</p>
+
+        <h3>Order Items</h3>
+        ${orderItemsHtml}
+
+        <h3>Delivery Address</h3>
+        <p>${address.address1}, ${address.city}, ${address.state}, ${address.zip}, ${address.country}</p>
+
+        <h3>Total Price</h3>
+        <p><strong>₹${totalPrice}</strong></p>
+
+        <p>We will notify you once your order is shipped.</p>
+      </div>
+    `;
+
+      // Send confirmation email
+      await sendEmail(email, "Order Placed Successfully", emailTemplate);
+
+      return res.status(200).json({
+        success: true,
+        message: "Order Placed Successfully",
+        order: placedOrder,
+        razorpayOrder: razorpayOrder,
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, message: err.message });
+    }
+  }
+
+  async verifyPayment(req, res) {
+    try {
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } =
+        req.body;
+
+      const generated_signature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+        .update(razorpay_order_id + "|" + razorpay_payment_id)
+        .digest("hex");
+
+      if (generated_signature === razorpay_signature) {
+        const updateOrderStatus = orderService.updateOrderStatus(orderId, "Paid");
+
+        if (!updateOrderStatus) {
+          throw error("Status not updated");
+        }
+        return res.status(200).json({ success: true, message: "Payment successful" });
+      } else {
+        return res
+          .status(400)
+          .json({ success: false, message: "Payment verification failed" });
+      }
+    } catch (error) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+
+  async updateOrderStatus(req, res) {
+    try {
+      const id = req.params.id;
+      const updateOrderStatus = orderService.updateOrderStatus(id, req.body.status);
+
+      if (!updateOrderStatus) {
+        return res.status(404).json({ success: false });
+      }
+      return res.status(200).send(order);
+    } catch (err) {
+      return res.status(500).json({ success: false, message: err.message });
+    }
+  }
+
+  async deleteOrder(req, res) {
+    try {
+      const orderId = req.params.id;
+      //console.log(id);
+      const response = await orderService.deleteOrder(orderId);
+      //console.log(response);
+      if (response) {
+        return res.status(200).json({ Success: true, message: "order is Deleted..!" });
+      } else {
+        return res
+          .status(404)
+          .json({ Success: false, message: "order is not Deleted..!" });
+      }
+    } catch (err) {
+      return res.status(500).json({ success: false, message: err.message });
+    }
+  }
+
+  async userOrderById(req, res) {
+    try {
+      const userId = req.params.id;
+
+      const userOrderList = await orderService.userOrderList(userId);
+
+      if (!userOrderList) {
+        return res.status(404).json({ success: false, message: "order not found" });
+      }
+      return res.status(200).send(userOrderList);
+    } catch (err) {
+      return res.status(500).json({ success: false, message: err.message });
+    }
+  }
+
   async totalOrders(req, res) {
     try {
       const totalOrders = await orderService.totalOrders();

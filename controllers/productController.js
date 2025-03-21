@@ -18,6 +18,27 @@ class ProductController {
     }
   }
 
+  async productById(req, res) {
+    const id = req.params.id;
+    // mongoose.isValidObjectId(id);
+    //console.log(id);
+    const product = await productService.productById(id);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+      });
+    }
+    return res.status(200).send(product);
+    //console.log(productList);
+  }
+  catch(err) {
+    //console.log("Server error", err);
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
+
   async addProduct(req, res) {
     try {
       const createdProduct = await productService.addProduct(req.body, req.file);

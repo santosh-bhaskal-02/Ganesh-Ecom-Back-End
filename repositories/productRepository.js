@@ -5,6 +5,10 @@ class ProductRepository {
     return await Product.find().populate("category");
   }
 
+  async productById(id) {
+    return await Product.findById(id).populate("category", "name");
+  }
+
   async addProduct(productData) {
     return await new Product(productData).save();
   }
@@ -13,14 +17,20 @@ class ProductRepository {
     return await Product.countDocuments();
   }
 
+  async updateStock(productId, quantity) {
+    return await Product.findByIdAndUpdate(productId, {
+      $inc: { stock: -quantity },
+    });
+  }
+
   async inventoryCount() {
     return await Product.aggregate([
       {
         $group: {
           _id: null,
-          totalStock: { $sum: "$stock" } 
-        }
-      }
+          totalStock: { $sum: "$stock" },
+        },
+      },
     ]);
   }
 }

@@ -142,9 +142,9 @@ class AuthService {
     try {
       const user = await userRepository.userbyId(id);
       if (!user) return { success: false, message: "User not found" };
-      return { success: true, message: "User Found successfully", user };
+      return user;
     } catch (error) {
-      return { success: false, message: "Internal Server Error" };
+      return { success: false, message: "Internal Server Error", error };
     }
   }
 

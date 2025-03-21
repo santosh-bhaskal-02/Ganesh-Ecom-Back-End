@@ -21,6 +21,8 @@ function authJwt() {
       { url: "/api/products/orders/update/:id", methods: ["PUT"] },
       { url: "/api/products/category/fetch", methods: ["GET"] },
       { url: "/api/dashboard/fetch", methods: ["GET"] },
+      { url: "/api/orders/verify_payment", methods: ["GET", "POST"] },
+      { url: "/api/orders/place_order", methods: ["GET", "POST"] },
     ],
   });
 }

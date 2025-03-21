@@ -1,6 +1,34 @@
 const orderRepository = require("../repositories/orderRepository");
 
 class orderService {
+  async createOrderItem(productId, quantity) {
+    return await orderRepository.createOrderItem(productId, quantity);
+  }
+
+  async placedOrder(orderItems, address, totalPrice, user) {
+    return await orderRepository.placedOrder(orderItems, address, totalPrice, user);
+  }
+
+  async orderById(userId) {
+    return await orderRepository.orderById(userId);
+  }
+
+  async updateOrderStatus(orderId, status) {
+    return await orderRepository.updateOrderStatus(orderId, status);
+  }
+
+  async deleteOrder(orderId) {
+    return orderRepository.deleteOrder(orderId);
+  }
+
+  async orderItemById(itemId) {
+    return await orderRepository.orderItemById(itemId);
+  }
+
+  async userOrderList(userId) {
+    return await orderRepository.userOrderList(userId);
+  }
+
   async totalOrders() {
     const totalOrders = await orderRepository.totalOrders();
     if (!totalOrders) {
@@ -22,7 +50,6 @@ class orderService {
       };
     }
     return totalSales.pop().total;
-
     //console.log(productList);
   }
 

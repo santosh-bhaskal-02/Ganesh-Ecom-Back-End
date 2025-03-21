@@ -179,27 +179,7 @@ router.put("/update/:id", upload.single("image"), async (req, res) => {
   }
 });
 
-router.get("/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    mongoose.isValidObjectId(id);
-    //console.log(id);
-    const product = await Product.findById(id).populate("category", "name");
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-      });
-    }
-    return res.status(200).send(product);
-    //console.log(productList);
-  } catch (err) {
-    //console.log("Server error", err);
-    return res.status(500).json({
-      success: false,
-      error: err.message,
-    });
-  }
-});
+router.get("/:id", productController.productById);
 
 router.get("/get/count", async (req, res) => {
   try {

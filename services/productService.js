@@ -10,6 +10,17 @@ class ProductService {
     return productList;
   }
 
+  async productById(id) {
+    const product = await productRepository.productById(id);
+    if (!product) {
+      return {
+        success: false,
+        message: "Product not found",
+      };
+    }
+    return product;
+  }
+
   async addProduct(productData, file) {
     const { title, price, stock, size, category, description } = productData;
 
@@ -36,6 +47,13 @@ class ProductService {
     };
 
     return await productRepository.addProduct(newProduct);
+  }
+
+  async updateStock(productId,quantity) {
+    const updateStock = await productRepository.updateStock(productId,quantity);
+    if (!updateStock) throw new Error("Product stock not updated");
+
+    return updateStock;
   }
 
   async productsCount() {
