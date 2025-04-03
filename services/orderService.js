@@ -1,6 +1,10 @@
 const orderRepository = require("../repositories/orderRepository");
 
 class orderService {
+  async allOrders() {
+    return await orderRepository.allOrders();
+  }
+
   async createOrderItem(productId, quantity) {
     return await orderRepository.createOrderItem(productId, quantity);
   }

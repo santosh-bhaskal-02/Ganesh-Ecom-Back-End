@@ -57,7 +57,6 @@ app.use("/api/users/signup/admin", routerAdminLogin);
 app.use("/api/users/login", routerLogin);
 app.use("/api/dashboard", routerDashboard);
 
-
 app.options("*", cors());
 
 //server

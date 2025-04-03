@@ -35,7 +35,7 @@ class orderController {
   async placedOrder(req, res) {
     try {
       const { user, orderItem } = req.body;
-
+      console.log("101", req.body);
       const userDetails = await authService.userbyId(user);
 
       if (!userDetails) {
