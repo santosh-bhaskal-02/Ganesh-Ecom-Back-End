@@ -2,8 +2,25 @@ const authService = require("../services/authService");
 
 class AuthController {
   async register(req, res) {
-    const response = await authService.register(req.body);
-    return res.status(response.success ? 201 : 400).json(response);
+    const { firstName, lastName, email, phone, password } = req.body;
+    try {
+      if (!firstName || !lastName || !email || !phone || !password) {
+        return { success: false, message: "All fields are required" };
+      }
+      const response = await authService.register(
+        firstName,
+        lastName,
+        email,
+        phone,
+        password
+      );
+      if (!response) {
+        return res.status(404).json({ success: false, message: "User Not Created" });
+      }
+      return res.status(201).json(response);
+    } catch {
+      return res.status(500).json({ success: false, message: err.message });
+    }
   }
 
   async login(req, res) {
@@ -39,14 +56,30 @@ class AuthController {
 
   async deleteUser(req, res) {
     const { id } = req.params;
-    const response = await authService.deleteUser(id);
-    return res.status(response.success ? 200 : 404).json(response);
+    try {
+      const response = await authService.deleteUser(id);
+      if (!response) {
+        return res
+          .status(404)
+          .json({ success: true, message: "User deleted successfully" });
+      }
+      return res.status(200).json(response);
+    } catch (err) {
+      return res.status(500).json({ success: false, message: err.message });
+    }
   }
 
   async userbyId(req, res) {
     const { id } = req.params;
-    const response = await authService.userbyId(id);
-    return res.status(response.success ? 200 : 404).json(response);
+    try {
+      const response = await authService.userbyId(id);
+      if (!response) {
+        return res.status(404).json({ success: false, message: "User Not Found" });
+      }
+      return res.status(200).send(response);
+    } catch (err) {
+      return res.status(500).json({ success: false, message: err.message });
+    }
   }
 
   async userList(req, res) {

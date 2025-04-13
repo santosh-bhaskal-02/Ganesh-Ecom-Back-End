@@ -7,9 +7,8 @@ const secret = process.env.JWT_SECRET;
 const saltRounds = 10;
 
 class AuthService {
-  async register(userData) {
+  async register(firstName, lastName, email, phone, password) {
     try {
-      const { firstName, lastName, email, phone, password } = userData;
       if (!firstName || !lastName || !email || !phone || !password) {
         return { success: false, message: "All fields are required" };
       }
@@ -126,26 +125,14 @@ class AuthService {
   }
 
   async deleteUser(userId) {
-    try {
-      const user = await userRepository.findById(userId);
-      if (!user) return { success: false, message: "User not found" };
+    const user = await userRepository.findById(userId);
+    if (!user) return { success: false, message: "User not found" };
 
-      await userRepository.deleteUser(userId);
-      return { success: true, message: "User deleted successfully" };
-    } catch (error) {
-      console.error("Error in deleteUser:", error);
-      return { success: false, message: "Internal Server Error" };
-    }
+    return await userRepository.deleteUser(userId);
   }
 
   async userbyId(id) {
-    try {
-      const user = await userRepository.userbyId(id);
-      if (!user) return { success: false, message: "User not found" };
-      return user;
-    } catch (error) {
-      return { success: false, message: "Internal Server Error", error };
-    }
+    return await userRepository.userbyId(id);
   }
 
   async userList() {
