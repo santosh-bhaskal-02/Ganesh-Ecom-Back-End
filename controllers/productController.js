@@ -22,21 +22,22 @@ class ProductController {
     const id = req.params.id;
     // mongoose.isValidObjectId(id);
     //console.log(id);
-    const product = await productService.productById(id);
-    if (!product) {
-      return res.status(404).json({
+    try {
+      const product = await productService.productById(id);
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+        });
+      }
+      return res.status(200).send(product);
+      //console.log(productList);
+    } catch (err) {
+      //console.log("Server error", err);
+      return res.status(500).json({
         success: false,
+        error: err.message,
       });
     }
-    return res.status(200).send(product);
-    //console.log(productList);
-  }
-  catch(err) {
-    //console.log("Server error", err);
-    return res.status(500).json({
-      success: false,
-      error: err.message,
-    });
   }
 
   async addProduct(req, res) {
@@ -87,6 +88,21 @@ class ProductController {
       return res.status(200).json({ inventoryCount: inventoryCount });
     } catch (err) {
       return res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+  }
+
+  async addCustomProduct(req, res) {
+    try {
+      const userId = req.params.id;
+      const result = await productService.addCustomProduct(userId, req.body, req.file);
+      return res.status(201).json({
+        success: true,
+        message: "Custom Product Suggestion Saved Successfully..!",
+        result,
+      });
+    } catch (err) {
+      console.error("Error saving product suggestion :", err.message);
+      return res.status(500).json({ success: false, error: err.message });
     }
   }
 }

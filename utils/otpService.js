@@ -13,15 +13,15 @@ async function sendOTP(email) {
 
     console.log("Stored OTPs:", otpStore);
 
-    const emailSent = await sendEmail(
-      email,
-      "Your OTP Code",
-      `<p>Your OTP code is: <strong>${otp}</strong>. It is valid for 10 minutes.</p>`
-    );
+    // const emailSent = await sendEmail(
+    //   email,
+    //   "Your OTP Code",
+    //   `<p>Your OTP code is: <strong>${otp}</strong>. It is valid for 10 minutes.</p>`
+    // );
 
-    if (!emailSent) {
-      return { success: false, message: "Failed to send OTP" };
-    }
+    // if (!emailSent) {
+    //   return { success: false, message: "Failed to send OTP" };
+    // }
 
     return { success: true, message: "OTP sent successfully" };
   } catch (error) {

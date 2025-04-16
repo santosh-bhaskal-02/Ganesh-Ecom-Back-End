@@ -93,6 +93,14 @@ class orderController {
       if (!placedOrder)
         return res.status(422).json({ success: false, message: "Order is not placed" });
 
+      const updateUserOrder = await authService.updateUserOrder(user, placedOrder._id);
+
+      if (!updateUserOrder) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Failed to Update order in User Schema" });
+      }
+
       const razorpay = new Razorpay({
         key_id: process.env.RAZORPAY_KEY_ID,
         key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -247,7 +255,10 @@ class orderController {
         .digest("hex");
 
       if (generated_signature === razorpay_signature) {
-        const updateOrderStatus = orderService.updateOrderStatus(orderId, "Paid");
+        const updateOrderStatus = orderService.updateOrderStatus(
+          orderId,
+          "Payment Successful"
+        );
 
         if (!updateOrderStatus) {
           throw error("Status not updated");
@@ -266,13 +277,14 @@ class orderController {
   async updateOrderStatus(req, res) {
     try {
       const id = req.params.id;
-      const updateOrderStatus = orderService.updateOrderStatus(id, req.body.status);
-
+      const updateOrderStatus = await orderService.updateOrderStatus(id, req.body.status);
+      //console.log(updateOrderStatus);
       if (!updateOrderStatus) {
         return res.status(404).json({ success: false });
       }
-      return res.status(200).send(order);
+      return res.status(200).send(updateOrderStatus);
     } catch (err) {
+      console.log(err);
       return res.status(500).json({ success: false, message: err.message });
     }
   }
@@ -300,7 +312,7 @@ class orderController {
       const userId = req.params.id;
 
       const userOrderList = await orderService.userOrderList(userId);
-
+      // console.log(userOrderList);
       if (!userOrderList) {
         return res.status(404).json({ success: false, message: "order not found" });
       }

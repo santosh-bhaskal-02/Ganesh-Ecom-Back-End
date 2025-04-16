@@ -20,6 +20,8 @@ router.post("/place_order_cart", orderController.placedCartOrder);
 
 router.put("/update/:id", orderController.updateOrderStatus);
 
+router.put("/cancel_order/:id", orderController.updateOrderStatus);
+
 router.delete("/delete/:id", orderController.deleteOrder);
 
 router.get("/get/total_sales", orderController.totalSales);

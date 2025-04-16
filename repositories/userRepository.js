@@ -22,7 +22,17 @@ class UserRepository {
   }
 
   async userbyId(id) {
-    return await User.findById(id).select("-password");
+    return await User.findById(id)
+      .select("-password")
+      .populate({
+        path: "orders",
+        populate: {
+          path: "orderItems",
+          populate: {
+            path: "product",
+          },
+        },
+      });
   }
 
   async usersList() {
@@ -31,6 +41,14 @@ class UserRepository {
 
   async usersCount() {
     return await User.countDocuments();
+  }
+
+  async updateUserOrder(userId, orderId) {
+    return await User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { orders: orderId } },
+      { new: true }
+    );
   }
 }
 

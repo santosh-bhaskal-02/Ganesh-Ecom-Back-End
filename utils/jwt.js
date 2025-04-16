@@ -13,7 +13,7 @@ function authJwt() {
         url: /^\/api\/products(.*)/,
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       },
-      { url: /^\/api\/users(.*)/, methods: ["GET", "POST", "PUT", "OPTIONS"] },
+      { url: /^\/api\/users(.*)/, methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"] },
       { url: "/api/users/signup", methods: ["POST"] },
       { url: "/api/users/login", methods: ["POST"] },
       { url: "/api/users/signup/admin/authenticate", methods: ["POST"] },

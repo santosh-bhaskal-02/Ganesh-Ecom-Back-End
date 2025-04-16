@@ -36,36 +36,41 @@ class orderService {
   async totalOrders() {
     const totalOrders = await orderRepository.totalOrders();
     if (!totalOrders) {
-      return {
-        success: false,
-        message: "Total orders Cannot be generated",
-      };
+      return 0;
     }
     return totalOrders;
   }
 
   async totalSales() {
     const totalSales = await orderRepository.totalSales();
-    //console.log(totalSales);
-    if (!totalSales) {
-      return {
-        success: false,
-        message: "Total sales Cannot be generated",
-      };
+    console.log("totalSales", totalSales);
+    // if (!totalSales) {
+    //   return {
+    //     success: false,
+    //     message: "Total sales Cannot be generated",
+    //   };
+    // }
+    if (totalSales.length === 0) {
+      return 0;
     }
+
     return totalSales.pop().total;
-    //console.log(productList);
   }
 
   async totalOrderItems() {
     const totalOrderItems = await orderRepository.totalOrderItems();
-    //console.log(totalSales);
+    console.log(totalOrderItems);
     if (!totalOrderItems) {
       return {
         success: false,
         message: "Total order items Cannot be generated",
       };
     }
+
+    if (totalOrderItems.length === 0) {
+      return 0;
+    }
+
     return totalOrderItems.pop().totalItems;
   }
 }

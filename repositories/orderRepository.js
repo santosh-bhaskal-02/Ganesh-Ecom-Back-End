@@ -66,16 +66,15 @@ class orderRepository {
   }
 
   async orderItemById(itemId) {
-      return await OrderItem.findById(itemId).populate("product", "price");
-    }
-  
+    return await OrderItem.findById(itemId).populate("product", "price");
+  }
 
   async totalOrders() {
     return await Order.countDocuments();
   }
 
-  async userOrderList(userId) {
-    return Order.find({ user: userId })
+  async userOrderList(orderId) {
+    return Order.findById(orderId)
       .populate("user", "name")
       .populate({
         path: "orderItems",

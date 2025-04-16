@@ -229,6 +229,12 @@ router.get("/get/by_category", async (req, res) => {
   }
 });
 
+router.post(
+  "/add/custom_product/:id",
+  upload.single("image"),
+  productController.addCustomProduct
+);
+
 module.exports = router;
 
 /*

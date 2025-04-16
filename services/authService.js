@@ -115,6 +115,7 @@ class AuthService {
 
   async userbyId(id) {
     const user = await userRepository.userbyId(id);
+   // console.log(user);
     if (!user) return { success: false, message: "User not found" };
     return user;
   }
@@ -134,6 +135,18 @@ class AuthService {
       success: !!count,
       message: count ? "User count retrieved" : "User count not found",
       count,
+    };
+  }
+
+  async updateUserOrder(userId, orderId) {
+    const response = await userRepository.updateUserOrder(userId, orderId);
+    //console.log("userid, orderId", userId, orderId);
+    //console.log(response);
+    if (!response)
+      return { success: false, message: "Failed to Update order in User Schema" };
+    return {
+      success: true,
+      message: "Order Updated in User Schema Successfully",
     };
   }
 }
