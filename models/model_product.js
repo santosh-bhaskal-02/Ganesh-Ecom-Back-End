@@ -37,7 +37,7 @@ const productSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-  reachDisciption: {
+  description: {
     type: String,
     default: "",
   },
