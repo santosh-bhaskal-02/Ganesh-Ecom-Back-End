@@ -3,8 +3,11 @@ const Cart = require("../models/model_cart");
 const CartItem = require("../models/model_cartItem");
 const router = express.Router();
 const Product = require("../models/model_product");
+const cartController = require("../controllers/cartController");
 
-router.get("/all", async (req, res) => {
+router.get("/all", cartController.allCarts);
+/*
+  async (req, res) => {
   //console.log("Hii");
   try {
     const cartItems = await Cart.find()
@@ -22,9 +25,11 @@ router.get("/all", async (req, res) => {
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
-});
+});*/
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", cartController.cartByUserId);
+
+/* async (req, res) => {
   try {
     const id = req.params.id;
     console.log(id);
@@ -43,9 +48,11 @@ router.get("/:id", async (req, res) => {
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
-});
+});*/
 
-router.post("/add_to_cart", async (req, res) => {
+router.post("/add_to_cart", cartController.addToCart);
+
+/*async (req, res) => {
   try {
     const { cartItem, user } = req.body;
     //  console.log(user);
@@ -63,6 +70,7 @@ router.post("/add_to_cart", async (req, res) => {
         const itemProduct = await existItem.populate("product");
         //console.log(itemProduct.product.price);
         //console.log(itemProduct.product.price * cartItem.quantity);
+
         await CartItem.findByIdAndUpdate(existItem._id, {
           $inc: {
             quantity: cartItem.quantity,
@@ -138,9 +146,10 @@ router.post("/add_to_cart", async (req, res) => {
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
-});
+});*/
 
-router.put("/update", async (req, res) => {
+router.put("/update", cartController.updateCartItemQuantity);
+/*async (req, res) => {
   try {
     const { userId, productId, action } = req.body;
 
@@ -211,9 +220,11 @@ router.put("/update", async (req, res) => {
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
-});
+});*/
 
-router.delete("/remove/:id", async (req, res) => {
+router.delete("/remove/:id", cartController.deleteCartItem);
+
+/*async (req, res) => {
   try {
     const itemId = req.params.id;
 
@@ -243,6 +254,6 @@ router.delete("/remove/:id", async (req, res) => {
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
-});
+});*/
 
 module.exports = router;

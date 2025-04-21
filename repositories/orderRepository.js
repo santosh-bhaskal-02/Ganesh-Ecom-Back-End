@@ -30,17 +30,28 @@ class orderRepository {
     return await newOrderItem.save();
   }
 
-  async placedOrder(orderItems, address, totalPrice, user) {
-    console.log("address", address);
-    const order = new Order({
+  async placedOrder(
+    orderItems,
+    user,
+    address,
+    taxCharge,
+    shippingCharge,
+    subTotal,
+    totalPrice
+  ) {
+    //console.log("address", address);
+    const order = await new Order({
       orderItems: orderItems,
       shipAddress: address,
-      status: "Awaiting for Payment",
+      user,
+      taxCharge,
+      shippingCharge,
+      subTotal,
       totalPrice: totalPrice,
-      user: user,
+      deliveredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    return await order.save();
+    return await order.save().then((savedOrder) => savedOrder.populate("user"));
   }
 
   async updateOrderStatus(orderId, status) {
@@ -109,6 +120,10 @@ class orderRepository {
         },
       },
     ]);
+  }
+
+  async fetchOrderStatus() {
+    return Order.schema.path("status").enumValues;
   }
 }
 

@@ -9,8 +9,24 @@ class orderService {
     return await orderRepository.createOrderItem(productId, quantity);
   }
 
-  async placedOrder(orderItems, address, totalPrice, user) {
-    return await orderRepository.placedOrder(orderItems, address, totalPrice, user);
+  async placedOrder(
+    orderItems,
+    user,
+    address,
+    taxCharge,
+    shippingCharge,
+    subTotal,
+    totalPrice
+  ) {
+    return await orderRepository.placedOrder(
+      orderItems,
+      user,
+      address,
+      taxCharge,
+      shippingCharge,
+      subTotal,
+      totalPrice
+    );
   }
 
   async orderById(userId) {
@@ -43,7 +59,7 @@ class orderService {
 
   async totalSales() {
     const totalSales = await orderRepository.totalSales();
-    console.log("totalSales", totalSales);
+    //  console.log("totalSales", totalSales);
     // if (!totalSales) {
     //   return {
     //     success: false,
@@ -59,7 +75,7 @@ class orderService {
 
   async totalOrderItems() {
     const totalOrderItems = await orderRepository.totalOrderItems();
-    console.log(totalOrderItems);
+    //console.log(totalOrderItems);
     if (!totalOrderItems) {
       return {
         success: false,
@@ -72,6 +88,10 @@ class orderService {
     }
 
     return totalOrderItems.pop().totalItems;
+  }
+
+  async fetchOrderStatus() {
+    return await orderRepository.fetchOrderStatus();
   }
 }
 

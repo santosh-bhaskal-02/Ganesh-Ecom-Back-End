@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const multer = require("multer");
 const Product = require("../models/model_product");
 const dashboardController = require("../controllers/dashboardController");
-const router = require("./router_login");
+const router = express.Router();
 
 router.get("/product/count", async (req, res) => {
   try {

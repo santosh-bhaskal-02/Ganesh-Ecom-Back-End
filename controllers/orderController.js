@@ -1,6 +1,7 @@
 const authService = require("../services/authService");
 const orderService = require("../services/orderService");
 const productService = require("../services/productService");
+const cartService = require("../services/cartService");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 
@@ -34,7 +35,8 @@ class orderController {
 
   async placedOrder(req, res) {
     try {
-      const { user, orderItem } = req.body;
+      const { user, orderItem, taxCharge, shippingCharge, subTotal, totalPrice } =
+        req.body;
       console.log("101", req.body);
       const userDetails = await authService.userbyId(user);
 
@@ -43,7 +45,7 @@ class orderController {
       }
       const { email, address } = userDetails;
 
-      console.log("User Address:", address);
+      // console.log("User Address:", address);
 
       const orderItemDetails = await Promise.all(
         orderItem.map(async (item) => {
@@ -80,14 +82,21 @@ class orderController {
         })
       );
 
-      const totalPrice = orderItemDetails.reduce((sum, item) => sum + item.totalPrice, 0);
+      if (orderItemDetails.length === 0) {
+        throw new Error("OrderItem Ids not created");
+      }
+
+      //  const totalPrice = orderItemDetails.reduce((sum, item) => sum + item.totalPrice, 0);
       const orderItems = orderItemDetails.map((item) => item.id);
 
       const placedOrder = await orderService.placedOrder(
         orderItems,
+        user,
         address,
-        totalPrice,
-        user
+        taxCharge,
+        shippingCharge,
+        subTotal,
+        totalPrice
       );
 
       if (!placedOrder)
@@ -130,14 +139,23 @@ class orderController {
         user: userDetails,
       });
     } catch (err) {
-      console.log(err);
+      console.log(err.message);
       return res.status(500).json({ success: false, message: err.message });
     }
   }
 
   async placedCartOrder(req, res) {
     try {
-      const { user, orderItem } = req.body;
+      const { user, orderItem, taxCharge, shippingCharge, subTotal, totalPrice } =
+        req.body;
+
+      const userDetails = await authService.userbyId(user);
+
+      if (!userDetails) {
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+
+      const { email, address } = userDetails;
 
       const orderItemIds = await Promise.all(
         orderItem.map(async function (item) {
@@ -151,8 +169,10 @@ class orderController {
             throw new Error(`Insufficient stock for ${product.title}`);
           }
 
+          // console.log("100", item.product.id);
+
           const updateStock = await productService.updateStock(
-            item.productId,
+            item.product.id,
             item.quantity
           );
 
@@ -170,47 +190,63 @@ class orderController {
         })
       );
 
-      console.log("OrderItem IDs:", orderItemIds);
+      //console.log("OrderItem IDs:", orderItemIds);
 
       if (orderItemIds.length === 0) {
         throw new Error("OrderItem Ids not created");
       }
 
-      let calculatePrice = await Promise.all(
-        orderItemIds.map(async (item) => {
-          console.log("Item IDs:", item);
-          //  console.log(item);
-          const orderItem = await orderService.orderItemById(item);
+      // let calculatePrice = await Promise.all(
+      //   orderItemIds.map(async (item) => {
+      //     console.log("Item IDs:", item);
+      //     //  console.log(item);
+      //     const orderItem = await orderService.orderItemById(item);
 
-          if (!orderItem || !orderItem.product) {
-            throw new Error(`Product details for OrderItem ID ${id} not found`);
-          }
+      //     if (!orderItem || !orderItem.product) {
+      //       throw new Error(`Product details for OrderItem ID ${id} not found`);
+      //     }
 
-          console.log("1", orderItem.product.price);
-          const total = orderItem.product.price * orderItem.quantity;
-          return total;
-        })
-      );
+      //     //console.log("1", orderItem.product.price);
+      //     const total = orderItem.product.price * orderItem.quantity;
+      //     return total;
+      //   })
+      // );
 
-      const totalPrice = calculatePrice.reduce((a, b) => a + b, 0);
+      // const totalPrice = calculatePrice.reduce((a, b) => a + b, 0);
 
-      const shipAddress = await authService.userbyId(user);
+      //const shipAddress = await authService.userbyId(user);
 
-      console.log("address", shipAddress.address);
+      //console.log("address", shipAddress.address);
 
-      if (!shipAddress) {
-        throw new Error(`shipAddress not found`);
-      }
+      // if (!shipAddress) {
+      //   throw new Error(`shipAddress not found`);
+      // }
 
       const placedOrder = await orderService.placedOrder(
         orderItemIds,
-        shipAddress.address,
-        totalPrice,
-        user
+        user,
+        address,
+        taxCharge,
+        shippingCharge,
+        subTotal,
+        totalPrice
       );
 
       if (!placedOrder) {
         return res.status(422).json({ success: false, message: "Orders is not placed" });
+      }
+      // console.log("218", orderItem);
+
+      const updateUserOrder = await authService.updateUserOrder(user, placedOrder._id);
+
+      const deleteOrderItemIds = await Promise.all(
+        orderItem.map(async function (item) {
+          await cartService.deleteCartItem(item._id);
+        })
+      );
+
+      if (!deleteOrderItemIds) {
+        return res.status(422).json({ success: false, message: "Cart is not Cleared" });
       }
 
       const razorpay = new Razorpay({
@@ -240,6 +276,7 @@ class orderController {
         razorpayOrder: razorpayOrder,
       });
     } catch (err) {
+      console.log("279 In OrderConntroller", err.message);
       return res.status(500).json({ success: false, message: err.message });
     }
   }
@@ -373,6 +410,29 @@ class orderController {
         success: true,
         message: "Total sales generated",
         totalOrderItems: totalOrderItems,
+      });
+      //console.log(productList);
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+      });
+    }
+  }
+
+  async fetchOrderStatus(req, res) {
+    try {
+      const response = await orderService.fetchOrderStatus();
+      if (!response) {
+        return res.status(404).json({
+          success: false,
+          message: "order status fetch failed",
+        });
+      }
+      return res.status(200).json({
+        success: true,
+        message: "Order status fetched Successfully",
+        orderStatus: response,
       });
       //console.log(productList);
     } catch (err) {

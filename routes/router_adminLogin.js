@@ -71,7 +71,7 @@ router.post("/", async (req, res) => {
 
 router.post("/authenticate", async (req, res) => {
   const { email, password } = req.body;
-   console.log(email);
+  console.log(email);
   try {
     const admin = await Admin.findOne({ email }).select("password");
     if (!admin) {
@@ -103,7 +103,6 @@ router.post("/authenticate", async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error", error });
-   
   }
 });
 

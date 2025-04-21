@@ -18,6 +18,7 @@ class ProductRepository {
   }
 
   async updateStock(productId, quantity) {
+    // console.log(productId, quantity);
     return await Product.findByIdAndUpdate(productId, {
       $inc: { stock: -quantity },
     });

@@ -30,4 +30,6 @@ router.get("/get/total_orders", orderController.totalOrders);
 
 router.get("/get/user_orders/:id", orderController.userOrderById);
 
+router.get("/fetch/status", orderController.fetchOrderStatus);
+
 module.exports = router;

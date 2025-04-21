@@ -23,6 +23,14 @@ function authJwt() {
       { url: "/api/dashboard/fetch", methods: ["GET"] },
       { url: "/api/orders/verify_payment", methods: ["GET", "POST"] },
       { url: "/api/orders/place_order", methods: ["GET", "POST"] },
+      {
+        url: /^\/api\/charges(.*)/,
+        methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
+      },
+      {
+        url: /^\/api\/custom-idol(.*)/,
+        methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
+      },
     ],
   });
 }

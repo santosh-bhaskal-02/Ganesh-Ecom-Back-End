@@ -15,7 +15,8 @@ const routerOrder = require("./routes/router_order.js");
 const routerCart = require("./routes/router_cart.js");
 const routerAdminLogin = require("./routes/router_adminLogin.js");
 const routerDashboard = require("./routes/router_dashBoard.js");
-
+const routerTaxDeliveryCharges = require("./routes/router_taxDeleveryCharges.js");
+const routerCustomIdol = require("./routes/router_customIdol.js");
 //helpers
 const authJwt = require("./utils/jwt.js");
 const errorHandler = require("./middlewares/error_handler.js");
@@ -56,8 +57,9 @@ app.use("/api/users/signup", routerSignup);
 app.use("/api/users/signup/admin", routerAdminLogin);
 app.use("/api/users/login", routerLogin);
 app.use("/api/dashboard", routerDashboard);
-
-app.options("*", cors());
+app.use("/api/charges", routerTaxDeliveryCharges);
+app.use("/api/custom-idol", routerCustomIdol);
+//app.options("*", cors());
 
 //server
 app.listen(port, () => {
