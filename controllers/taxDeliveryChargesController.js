@@ -4,10 +4,11 @@ const addTaxDeliveryCharges = async (req, res) => {
   try {
     const { tax, deliveryCharge } = req.body;
 
-    console.log(req.body);
+    //console.log(req.body);
     const existingCharges = await taxDeliveryChargesService.fetchTaxDeliveryCharges();
-    console.log(existingCharges.id);
+
     if (existingCharges) {
+      //console.log(existingCharges.id);
       const updateCharges = await taxDeliveryChargesService.updateTaxDeliveryCharges(
         existingCharges.id,
         tax,
