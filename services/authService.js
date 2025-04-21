@@ -88,8 +88,8 @@ class AuthService {
   async verifyOTP({ email, otp }) {
     const isValid = await verifyOTP(email, otp);
     return {
-      success: !!isValid,
-      message: isValid ? "OTP verified successfully" : "Invalid or expired OTP",
+      success: isValid.success,
+      message: isValid.message,
     };
   }
 
@@ -115,7 +115,7 @@ class AuthService {
 
   async userbyId(id) {
     const user = await userRepository.userbyId(id);
-   // console.log(user);
+    // console.log(user);
     if (!user) return { success: false, message: "User not found" };
     return user;
   }

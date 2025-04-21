@@ -4,7 +4,13 @@ class AuthController {
   async register(req, res) {
     try {
       const { firstName, lastName, email, phone, password } = req.body;
-      const result = await authService.register({ firstName, lastName, email, phone, password });
+      const result = await authService.register({
+        firstName,
+        lastName,
+        email,
+        phone,
+        password,
+      });
       return res.status(result.success ? 201 : 400).json(result);
     } catch (error) {
       return res.status(500).json({ success: false, message: error.message });
@@ -45,6 +51,7 @@ class AuthController {
     try {
       const { email, otp } = req.body;
       const result = await authService.verifyOTP({ email, otp });
+      console.log("54", result);
       return res.status(result.success ? 200 : 400).json(result);
     } catch (error) {
       return res.status(500).json({ success: false, message: error.message });

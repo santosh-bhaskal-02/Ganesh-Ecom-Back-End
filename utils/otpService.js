@@ -2,7 +2,7 @@ const dotenv = require("dotenv");
 const sendEmail = require("../config/config_brevo");
 
 dotenv.config();
-const otpStore = {}; // Consider replacing with a DB like Redis for persistence.
+const otpStore = {};
 
 async function sendOTP(email) {
   try {
@@ -32,22 +32,28 @@ async function sendOTP(email) {
 
 async function verifyOTP(email, otp) {
   try {
+    if (!email || !otp) {
+      return { success: false, message: "OTP not found or expired" };
+    }
     const storedOtpData = otpStore[email];
+    console.log("Received OTP verification request:", email, otp);
 
+    //console.log("36", otp, storedOtpData.otp);
     if (!storedOtpData) {
       return { success: false, message: "OTP not found or expired" };
     }
-
-    if (storedOtpData.otp !== otp) {
+    // console.log("40", storedOtpData.otp !== otp);
+    // console.log("41", String(storedOtpData.otp) !== String(otp));
+    if (String(storedOtpData.otp) !== String(otp)) {
       return { success: false, message: "Invalid OTP" };
     }
 
     if (Date.now() > storedOtpData.otpExpires) {
-      delete otpStore[email]; // Remove expired OTP
+      delete otpStore[email];
       return { success: false, message: "OTP expired" };
     }
 
-    delete otpStore[email]; // Remove OTP after successful verification
+    delete otpStore[email];
     return { success: true, message: "OTP verified successfully" };
   } catch (error) {
     console.error("OTP verification error:", error);
