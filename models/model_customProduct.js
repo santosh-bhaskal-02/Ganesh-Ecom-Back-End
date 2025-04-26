@@ -38,10 +38,28 @@ const customProductSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+
+  category: {
+    type: String,
+    default: "customized",
+  },
+
+  status: {
+    type: String,
+    enum: [
+      "Accepted",
+      "Rejected",
+      "Awaiting for Payment",
+      "Payment Successful",
+      "Shipped",
+      "Out for Delivery",
+      "Delivered",
+      "Cancelled",
+    ],
+  },
 });
 
 customProductSchema.virtual("id").get(function () {
-  // console.log(this._id.toHexString());
   return this._id.toHexString();
 });
 

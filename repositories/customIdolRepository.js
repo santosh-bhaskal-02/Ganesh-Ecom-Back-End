@@ -12,4 +12,25 @@ const fetchCustomProductById = async (formId) => {
   return await CustomProduct.findById(formId).populate("user");
 };
 
-module.exports = { addCustomProduct, fetchCustomProductList, fetchCustomProductById };
+const updateCustomProductStatus = async (formId, status) => {
+  return await CustomProduct.findByIdAndUpdate(
+    formId,
+    { status },
+    {
+      new: true,
+    }
+  );
+};
+
+const fetchCustomProductByUserId = async (userId) => {
+  //console.log("26", userId);
+  return await CustomProduct.findOne({ user: userId }).populate("user");
+};
+
+module.exports = {
+  addCustomProduct,
+  fetchCustomProductList,
+  fetchCustomProductById,
+  updateCustomProductStatus,
+  fetchCustomProductByUserId,
+};

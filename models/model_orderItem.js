@@ -5,7 +5,10 @@ const orderItemSchema = new Schema({
   product: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Product",
-    required: true,
+  },
+  customProduct: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "CustomProduct",
   },
   quantity: {
     type: Number,

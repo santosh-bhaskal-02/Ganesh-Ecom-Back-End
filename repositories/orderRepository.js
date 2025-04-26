@@ -17,14 +17,17 @@ class orderRepository {
       .populate("user", "name")
       .populate({
         path: "orderItems",
-        populate: { path: "product", populate: "category" },
+        populate: [
+          { path: "product", populate: { path: "category" } },
+          { path: "customProduct" },
+        ],
       })
       .sort({ orderDate: -1 });
   }
 
   async createOrderItem(productId, quantity) {
     const newOrderItem = new OrderItem({
-      product: productId,
+      customProduct: productId,
       quantity: quantity,
     });
     return await newOrderItem.save();
@@ -90,6 +93,7 @@ class orderRepository {
       .populate({
         path: "orderItems",
         populate: { path: "product", populate: "category" },
+        populate: { path: "customProduct" },
       })
       .sort({ orderDate: -1 });
   }

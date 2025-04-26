@@ -32,4 +32,18 @@ const fetchCustomProductById = async (formId) => {
   return await customIdolRepository.fetchCustomProductById(formId);
 };
 
-module.exports = { addCustomProduct, fetchCustomProductList, fetchCustomProductById };
+const updateCustomProductStatus = async (formId, status) => {
+  return await customIdolRepository.updateCustomProductStatus(formId, status);
+};
+
+const fetchCustomProductByUserId = async (userId) => {
+  return await customIdolRepository.fetchCustomProductByUserId(userId);
+};
+
+module.exports = {
+  addCustomProduct,
+  fetchCustomProductList,
+  fetchCustomProductById,
+  updateCustomProductStatus,
+  fetchCustomProductByUserId,
+};

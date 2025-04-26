@@ -1,8 +1,4 @@
 const express = require("express");
-const Order = require("../models/model_order");
-const OrderItem = require("../models/model_orderItem");
-const User = require("../models/model_user");
-const Product = require("../models/model_product");
 const orderController = require("../controllers/orderController");
 const router = express.Router();
 
