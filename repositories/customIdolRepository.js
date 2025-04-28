@@ -24,7 +24,7 @@ const updateCustomProductStatus = async (formId, status) => {
 
 const fetchCustomProductByUserId = async (userId) => {
   //console.log("26", userId);
-  return await CustomProduct.findOne({ user: userId }).populate("user");
+  return await CustomProduct.find({ user: userId }).populate("user");
 };
 
 module.exports = {

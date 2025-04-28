@@ -100,8 +100,7 @@ class orderRepository {
       .populate("user", "name")
       .populate({
         path: "orderItems",
-        populate: { path: "product", populate: "category" },
-        populate: { path: "customProduct" },
+        populate: [{ path: "product", populate: "category" }, { path: "customProduct" }],
       })
       .sort({ orderDate: -1 });
   }
