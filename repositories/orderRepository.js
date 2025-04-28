@@ -25,9 +25,17 @@ class orderRepository {
       .sort({ orderDate: -1 });
   }
 
-  async createOrderItem(productId, quantity) {
+  async createCustomOrderItem(productId, quantity) {
     const newOrderItem = new OrderItem({
       customProduct: productId,
+      quantity: quantity,
+    });
+    return await newOrderItem.save();
+  }
+
+  async createOrderItem(productId, quantity) {
+    const newOrderItem = new OrderItem({
+      product: productId,
       quantity: quantity,
     });
     return await newOrderItem.save();

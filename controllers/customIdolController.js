@@ -106,7 +106,7 @@ const placedOrder = async (req, res) => {
 
         // console.log("100", item.product.id);
 
-        const createOrderItem = await orderService.createOrderItem(
+        const createOrderItem = await orderService.createCustomOrderItem(
           item.productId,
           item.quantity
         );

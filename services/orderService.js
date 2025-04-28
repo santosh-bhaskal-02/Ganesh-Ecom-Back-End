@@ -9,6 +9,10 @@ class orderService {
     return await orderRepository.createOrderItem(productId, quantity);
   }
 
+  async createCustomOrderItem(productId, quantity) {
+    return await orderRepository.createCustomOrderItem(productId, quantity);
+  }
+
   async placedOrder(
     orderItems,
     user,
