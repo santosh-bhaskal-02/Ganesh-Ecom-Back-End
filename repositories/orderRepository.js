@@ -12,15 +12,12 @@ class orderRepository {
       .sort({ orderDate: -1 });
   }
 
-  async orderById(userId) {
-    return await Order.find({ user: userId })
+  async orderById(orderId) {
+    return Order.findById(orderId)
       .populate("user", "name")
       .populate({
         path: "orderItems",
-        populate: [
-          { path: "product", populate: { path: "category" } },
-          { path: "customProduct" },
-        ],
+        populate: [{ path: "product", populate: "category" }, { path: "customProduct" }],
       })
       .sort({ orderDate: -1 });
   }
@@ -95,12 +92,15 @@ class orderRepository {
     return await Order.countDocuments();
   }
 
-  async userOrderList(orderId) {
-    return Order.findById(orderId)
+  async userOrderList(userId) {
+    return await Order.find({ user: userId })
       .populate("user", "name")
       .populate({
         path: "orderItems",
-        populate: [{ path: "product", populate: "category" }, { path: "customProduct" }],
+        populate: [
+          { path: "product", populate: { path: "category" } },
+          { path: "customProduct" },
+        ],
       })
       .sort({ orderDate: -1 });
   }
@@ -135,6 +135,10 @@ class orderRepository {
 
   async fetchOrderStatus() {
     return Order.schema.path("status").enumValues;
+  }
+
+  async saveOrder(order) {
+    return await order.save();
   }
 }
 

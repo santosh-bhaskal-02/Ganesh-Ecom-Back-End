@@ -33,13 +33,43 @@ class orderService {
     );
   }
 
-  async orderById(userId) {
-    return await orderRepository.orderById(userId);
+  async orderById(orderId) {
+    return await orderRepository.orderById(orderId);
   }
 
   async updateOrderStatus(orderId, status) {
-    return await orderRepository.updateOrderStatus(orderId, status);
+    const order = await orderRepository.orderById(orderId);
+    if (!order) throw new Error("Order not found");
+
+    order.status = status;
+    const today = new Date();
+
+    switch (status) {
+      case "Awaiting for Payment":
+        order.deliveredAt = null;
+        break;
+      case "Payment Successful":
+        const deliveryDate = new Date(today);
+        deliveryDate.setDate(today.getDate() + 7);
+        order.deliveredAt = deliveryDate;
+        break;
+      case "Out for Delivery":
+        order.deliveredAt = today;
+        break;
+      case "Delivered":
+        order.deliveredAt = today;
+        break;
+      case "Cancelled":
+        order.deliveredAt = null;
+        break;
+    }
+    console.log(order);
+    return await orderRepository.saveOrder(order);
   }
+
+  // async updateOrderStatus(orderId, status) {
+  //   return await orderRepository.updateOrderStatus(orderId, status);
+  // }
 
   async deleteOrder(orderId) {
     return orderRepository.deleteOrder(orderId);

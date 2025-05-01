@@ -1,7 +1,22 @@
 const express = require("express");
 const Category = require("../models/model_category");
 const router = express.Router();
+const categoryController = require("../controllers/categoryController");
 
+
+router.get("/fetch", categoryController.fetchAll);
+
+router.get("/:id", categoryController.fetchById);
+
+router.post("/add", categoryController.addCategory);
+
+router.put("/update/:id", categoryController.updateCategory);
+
+router.delete("/delete/:id", categoryController.removeCategory);
+
+module.exports = router;
+
+/*
 router.get("/fetch", async (req, res) => {
   try {
     const categoryList = await Category.find();
@@ -86,3 +101,4 @@ router.delete("/delete/:id", async (req, res) => {
 });
 
 module.exports = router;
+*/

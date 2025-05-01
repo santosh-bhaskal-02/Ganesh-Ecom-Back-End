@@ -20,9 +20,9 @@ class orderController {
 
   async orderById(req, res) {
     try {
-      console.log("usecart ", req.params.id);
-      const userId = req.params.id;
-      const order = await orderService.orderById(userId);
+      console.log("23 ", req.params.id);
+      const orderId = req.params.id;
+      const order = await orderService.orderById(orderId);
       //console.log("Order ", order);
       if (!order) {
         return res.status(404).json({ success: false, message: "order not found" });
