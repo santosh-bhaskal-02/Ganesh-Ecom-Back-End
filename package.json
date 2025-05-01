@@ -12,6 +12,7 @@
   "author": "Alone",
   "license": "ISC",
   "dependencies": {
+    "@google/genai": "^2.6.0",
     "backend": "file:",
     "bcryptjs": "^3.0.2",
     "brevo": "^1.0.0",

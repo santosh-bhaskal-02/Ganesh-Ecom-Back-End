@@ -17,6 +17,7 @@ const routerAdminLogin = require("./routes/router_adminLogin.js");
 const routerDashboard = require("./routes/router_dashBoard.js");
 const routerTaxDeliveryCharges = require("./routes/router_taxDeleveryCharges.js");
 const routerCustomIdol = require("./routes/router_customIdol.js");
+const routerAiChat = require("./routes/router_aiChat.js");
 //helpers
 const authJwt = require("./utils/jwt.js");
 const errorHandler = require("./middlewares/error_handler.js");
@@ -33,7 +34,7 @@ app.use(
     origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
 app.use(express.json());
@@ -59,8 +60,15 @@ app.use("/api/users/login", routerLogin);
 app.use("/api/dashboard", routerDashboard);
 app.use("/api/charges", routerTaxDeliveryCharges);
 app.use("/api/custom-idol", routerCustomIdol);
-//app.options("*", cors());
-
+app.use("/api/ai", routerAiChat);
+app.use((err, req, res, next) => {
+  console.error("Global Unhandled Error:", err.stack);
+  const statusCode = err.statusCode || 500;
+  res.status(statusCode).json({
+    message: err.message || "Internal Server Error",
+    stack: process.env.NODE_ENV === "development" ? err.stack : {},
+  });
+});
 //server
 app.listen(port, () => {
   console.log(`Server running on port - http://localhost:${port}`);

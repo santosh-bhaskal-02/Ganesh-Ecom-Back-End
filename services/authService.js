@@ -1,4 +1,5 @@
 const userRepository = require("../repositories/userRepository");
+const adminRepository = require("../repositories/adminRepository");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const {sendOTP, verifyOTP} = require("../utils/otpService");
@@ -41,12 +42,15 @@ class AuthService {
 
     async login({email, password}) {
         const user = await userRepository.findByEmail(email);
-        if (!user) return {success: false, message: "User not found"};
+        const admin = user ? null : await adminRepository.findByEmailWithPassword(email);
+        const account = user || admin;
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!account) return {success: false, message: "User not found"};
+
+        const isPasswordValid = await bcrypt.compare(password, account.password);
         if (!isPasswordValid) return {success: false, message: "Invalid password"};
 
-        const token = jwt.sign({userId: user._id, isAdmin: user.isAdmin}, secret, {
+        const token = jwt.sign({userId: account._id, isAdmin: account.isAdmin}, secret, {
             expiresIn: "1d",
         });
 
@@ -54,9 +58,9 @@ class AuthService {
             success: true,
             message: "Login successful",
             user: {
-                email: user.email,
-                userId: user._id,
-                isAdmin: user.isAdmin,
+                email: account.email,
+                userId: account._id,
+                isAdmin: account.isAdmin,
                 token,
             },
         };

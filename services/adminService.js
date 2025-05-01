@@ -27,15 +27,19 @@ const authenticate = async (email, password) => {
     const valid = await bcrypt.compare(password, admin.password);
     if (!valid) return {error: "Invalid password"};
 
-    const token = jwt.sign({userId: admin._id, isAdmin: admin.isadmin}, secret, {
+    const token = jwt.sign({userId: admin._id, isAdmin: admin.isAdmin}, secret, {
         expiresIn: "1d",
     });
 
     return {
-        token,
-        adminId: admin._id,
-        email,
-        isAdmin: admin.isadmin,
+        success: true,
+        message: "Login successful",
+        user: {
+            email: admin.email,
+            userId: admin._id,
+            isAdmin: admin.isAdmin,
+            token,
+        },
     };
 };
 

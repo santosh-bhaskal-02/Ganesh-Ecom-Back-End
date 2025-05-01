@@ -24,6 +24,10 @@ function authJwt() {
       { url: "/api/orders/verify_payment", methods: ["GET", "POST"] },
       { url: "/api/orders/place_order", methods: ["GET", "POST"] },
       {
+        url: /^\/api\/ai(.*)/,
+        methods: ["GET", "POST", "OPTIONS"],
+      },
+      {
         url: /^\/api\/charges(.*)/,
         methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
       },

@@ -3,7 +3,7 @@ const Admin = require("../models/model_admin");
 const findByEmail = async (email) => await Admin.findOne({email});
 
 const findByEmailWithPassword = async (email) =>
-    await Admin.findOne({email}).select("password isadmin");
+    await Admin.findOne({email}).select("password isAdmin");
 
 const registerAdmin = async (adminData) => {
     const newAdmin = new Admin(adminData);
